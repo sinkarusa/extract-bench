@@ -28,7 +28,7 @@ DATASET_ORDER = ["fatura", "omniai", "docvqa", "vrdu", "realdoc", "kleister_nda"
 # board name -> (systems, reference, dataset filter)
 BOARDS = {
     "headline": (["sage2", "clairic"], "sage2", None),
-    "text": (["sage2", "clairic", "nuextract3", "schematron3b", "gliner25"], "sage2", None),
+    "text": (["sage2", "clairic", "nuextract3", "schematron3b", "gliner25", "d1_2b"], "sage2", None),
     "image": (["sage2", "clairic_img"], "sage2", IMAGE_SETS),
 }
 N_BOOT, SEED = 2000, 20

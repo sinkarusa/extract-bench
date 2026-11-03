@@ -428,9 +428,12 @@ def exact_norm(pred, gold, ftype: str = "text", field: dict | None = None) -> fl
 
 
 def _cents(x: float) -> float:
-    """Round half-up to 2 dp via the shortest repr, so 914.845 -> 914.85 (float round() gives 914.84)."""
-    from decimal import Decimal, ROUND_HALF_UP
-    return float(Decimal(repr(x)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+    """Round half-up to 2 dp via the shortest repr, so 914.845 -> 914.85 (float round() gives 914.84). Exact at any
+    magnitude: a span of glued digit runs parses to ~1e27, past Decimal's default 28-digit quantize precision."""
+    from decimal import Decimal, ROUND_HALF_UP, localcontext
+    with localcontext() as ctx:
+        ctx.prec = 400   # covers float's whole range (max ~1.8e308) plus 2 dp
+        return float(Decimal(repr(x)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
 
 
 def date_exact(pred, gold, field=None) -> float:

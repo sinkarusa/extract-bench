@@ -1,0 +1,15 @@
+{
+ "system": "d1_2b",
+ "benchmark_version": "v0.1",
+ "display_name": "d1-2B",
+ "org": "Liquid AI",
+ "model": "LiquidAI/d1-2B",
+ "arm": "d1_2b",
+ "input": "text",
+ "run_date": "2026-11-02",
+ "open_weights": true,
+ "maintainer_product": false,
+ "notes": "transformers 5.22.1 remote code @ 10e7671d, bf16, one RTX 3090; one system_one call per document (one read question per field, definition as instructions, no generation). Every read keeps its span; a field answers when its calibrated found >= 0.5 (the model's own cut; a fit-half sweep picked 0.40, +0.2 on eval, not used). No list read: list fields get one value. Not tuned.",
+ "tier": "self-reported",
+ "n_items": 1844
+}

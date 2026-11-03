@@ -1,4 +1,5 @@
-"""Open-weight extraction models on the bench: NuExtract3 (NuMind), Schematron-3B (Inference.net), GLiNER2.5-base (Fastino).
+"""Open-weight extraction models on the bench: NuExtract3 (NuMind), Schematron-3B (Inference.net), GLiNER2.5-base (Fastino),
+d1-2B (Liquid AI).
 
 The requests are built HERE, from the same item text (`run.item_text`) and the same field definitions every other arm gets.
 A GPU box only runs inference (`python -m extract_bench.pod.infer_open`). The raw outputs come back and are parsed HERE
@@ -19,6 +20,10 @@ Field mapping (the same definition text as `instructions` for Clairic / `definit
   constrained to the schema; greedy.
 - GLiNER2.5-base: one entity label per field with the definition as its description; scalar field = the most confident
   span, list field = every span; documents longer than the encoder window are split into overlapping chunks.
+- d1-2B: one named System One read question per field (`system_one`, one forward pass, no generated tokens) with the
+  definition as its `instructions`; text -> text, number/money -> number (money with its `unit`), date -> date;
+  time/datetime/duration -> text (the scorer parses the written form). d1 has no list read, so a list field is one
+  read of its item type and scores as a one-element list. A read is null when its `found` is under 0.5.
 """
 from __future__ import annotations
 
@@ -34,6 +39,7 @@ MODELS = {
     "nuextract3": {"hf": "numind/NuExtract3", "kind": "nuextract"},
     "schematron3b": {"hf": "inference-net/Schematron-3B", "kind": "schematron"},
     "gliner25": {"hf": "fastino/gliner2.5-base-v1", "kind": "gliner"},
+    "d1_2b": {"hf": "LiquidAI/d1-2B", "kind": "d1"},
 }
 NU_TYPES = {"text": "verbatim-string", "money": "number", "date": "date", "time": "time", "datetime": "date-time",
             "duration": "duration"}
@@ -65,6 +71,16 @@ def json_type(f):
 
 FMT = {"date": " Format: YYYY-MM-DD.", "time": " Format: HH:MM (24h).", "datetime": " Format: ISO 8601 date-time.",
        "duration": " Format: ISO 8601 duration, e.g. P2Y.", "money": " A plain number, no currency symbol."}
+D1_TYPES = {"text": "text", "number": "number", "money": "number", "date": "date"}  # every other type reads as text
+D1_FOUND = 0.5  # a read answers when its calibrated `found` reaches this; below it the field is null
+
+
+def d1_question(f):
+    t = f.get("items", "text") if f["type"] == "list" else f["type"]
+    q = {"type": D1_TYPES.get(t, "text"), "instructions": definition(f)}
+    if t == "money" and f.get("unit"):
+        q["unit"] = f["unit"]
+    return q
 
 
 def build(item, text, model):
@@ -89,6 +105,8 @@ def build(item, text, model):
     if model == "gliner25":
         return {"text": text, "labels": {f["name"]: definition(f) for f in fields},
                 "list_fields": [f["name"] for f in fields if f["type"] == "list"]}
+    if model == "d1_2b":
+        return {"state": text, "questions": {f["name"]: d1_question(f) for f in fields}}
     raise KeyError(model)
 
 
@@ -158,6 +176,24 @@ def parse(item, model, result):
             else:
                 out[f["name"]] = {"value": ss[0]["text"] if ss else None, "conf": ss[0].get("confidence") if ss else None}
         return out
+    if model == "d1_2b":
+        answers = result.get("answers")
+        if not isinstance(answers, dict):
+            return None
+        out = {}
+        for f in item["fields"]:
+            a = answers.get(f["name"]) or {}
+            v = a.get(a.get("type"))
+            if (a.get("found") or 0.0) < D1_FOUND:
+                v = None
+            elif v is None and a.get("text") is not None:
+                v = a["text"]  # found, but d1's strict parser did not settle a value: the scorer parses the written form
+            if f["type"] == "list":
+                v = [] if v in (None, "") else [v]
+            elif v == "":
+                v = None
+            out[f["name"]] = {"value": v, "conf": a.get("found"), "span": a.get("span")}
+        return out
     raise KeyError(model)
 
 
@@ -176,7 +212,7 @@ def do_import(a):
             base = {"id": it["id"], "dataset": r["dataset"], "arm": m, "spec": spec, "text_source": r.get("text_source"),
                     "n_images": 0, "holdout": is_holdout(it), "ts": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "mock": False,
                     "cost_usd": 0.0, "wall_ms": r.get("wall_ms"), "n_calls": r.get("n_calls", 1),
-                    "raw_responses": [{"call": 0, "response": r.get("text") if m != "gliner25" else r.get("spans")}],
+                    "raw_responses": [{"call": 0, "response": r.get({"gliner25": "spans", "d1_2b": "answers"}.get(m, "text"))}],
                     "pod": r.get("pod")}
             if r.get("empty"):
                 preds = {f["name"]: {"value": None, "conf": None, "input_empty": True} for f in it["fields"]}

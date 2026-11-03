@@ -9,7 +9,7 @@ labels from 12 public datasets of invoices, receipts, forms, contracts, reports,
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/leaderboard-dark.png">
-  <img alt="Leaderboard: mean field accuracy and 'not in the document' accuracy for five extraction systems" src="docs/images/leaderboard.png">
+  <img alt="Leaderboard: mean field accuracy and 'not in the document' accuracy for six extraction systems" src="docs/images/leaderboard.png">
 </picture>
 
 ## Leaderboard (v0.1)
@@ -19,8 +19,9 @@ labels from 12 public datasets of invoices, receipts, forms, contracts, reports,
 | 1 | Sage 2 (rc9 preview, fast) \* | Levanto | API | 77.8 | reference | 72.2 |
 | 2 | NuExtract3 | NuMind | open (4B) | 76.1 | −1.7 [−4.3, +0.9] | 57.0 |
 | 3 | Clairic | Cloudflare | API | 75.3 | −2.5 [−5.4, +0.2] | 59.0 |
-| 4 | Schematron-3B | Inference.net | open (3B) | 59.9 | −17.9 [−21.1, −14.8] | 54.3 |
-| 5 | GLiNER2.5 | Fastino | open (194M) | 35.7 | −42.1 [−45.4, −38.9] | 44.1 |
+| 4 | d1-2B | Liquid AI | open (2B) | 63.5 | −14.4 [−17.3, −11.1] | 63.7 |
+| 5 | Schematron-3B | Inference.net | open (3B) | 59.9 | −17.9 [−21.1, −14.8] | 54.3 |
+| 6 | GLiNER2.5 | Fastino | open (194M) | 35.7 | −42.1 [−45.4, −38.9] | 44.1 |
 
 \* Levanto maintains this benchmark and sells Sage 2.
 
@@ -127,7 +128,8 @@ This is the short version. [docs/METHODOLOGY.md](docs/METHODOLOGY.md) has the de
 
 1. Every system reads the same text: native text, the dataset's official OCR, or one shared Tesseract pass. Every
    system gets the same field definitions, in its own request format. Sage 2 and Clairic take typed fields, NuExtract3
-   takes a JSON template, Schematron takes a JSON Schema, and GLiNER2.5 takes entity labels.
+   takes a JSON template, Schematron takes a JSON Schema, GLiNER2.5 takes entity labels, and d1-2B takes one typed read
+   question per field.
 2. An answer is correct when it matches the gold after normalising for its type. The scorer converts dates to ISO,
    compares money in cents, parses numbers, and NFKC-normalises and case-folds text. Under rule (a), a null answer
    is correct when the gold is empty, so leaving a field blank is a real answer. DocVQA uses ANLS, SQuAD uses token F1

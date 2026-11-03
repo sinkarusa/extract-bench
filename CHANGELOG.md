@@ -4,6 +4,16 @@ Benchmark versions look like `vMAJOR.MINOR`. A new version starts whenever numbe
 label fix, a scorer change or a split change. Each version keeps its own `splits/` file and `results/` directory.
 Package releases follow semver.
 
+## Unreleased
+
+- d1-2B (Liquid AI, open weights) joins the text board through `extract-bench open` as `d1_2b`: one `system_one`
+  read question per field, one forward pass per document, bf16 on one RTX 3090, model code pinned to revision
+  `10e7671d`. The runner keeps every read's span and the import answers at calibrated `found` >= 0.5, d1's own cut
+  (d1 itself also dropped spans whose raw `found` was under 0.5; 391 fields recovered). d1 has no list read, so each
+  list field gets one value. The other systems' scores don't change.
+- `score._cents` no longer raises `InvalidOperation` on money values beyond 28 significant digits (a multi-line span
+  whose digit runs parse as one number); such a value now scores 0.
+
 ## v0.1 (package 0.1.0), 2026-11-01
 
 This is the first release prepared for publication.

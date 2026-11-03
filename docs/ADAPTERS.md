@@ -17,7 +17,7 @@ An arm name has the form `BASE[@variant][#view]`.
 | `clairic_vision` | Clairic | The page image only |
 | `clairic_vision_ocr` | Clairic | The page image plus the same text the text arms read |
 | `haiku_json`, `gemini_vision_json`, `or:<model>:text\|image\|image+text` | Any OpenRouter model | A strict JSON schema built from the fields |
-| `nuextract3`, `schematron3b`, `gliner25` | Open-weight models | Text, run through `extract-bench open` (export, then GPU inference, then import) |
+| `nuextract3`, `schematron3b`, `gliner25`, `d1_2b` | Open-weight models | Text, run through `extract-bench open` (export, then GPU inference, then import) |
 
 A `@variant` reads an alternative text instead of the default one. Items that don't have that text count as not
 applicable. The variants are `@tesseract_layer`, `@textract_layer`, `@djvu_layer` and `@best_layer` for Kleister;

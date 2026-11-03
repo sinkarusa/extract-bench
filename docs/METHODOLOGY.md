@@ -42,8 +42,9 @@ Each system gets the same field definitions in its own request format. The adapt
 | NuExtract3 | A JSON template with NuExtract types, the definitions passed as the `instructions` chat-template argument, thinking off | 32k context; the runner skips longer prompts |
 | Schematron-3B | A draft-07 JSON Schema with the definitions as descriptions, the model card's prompt, the text wrapped in minimal HTML, schema-constrained decoding | 32k context |
 | GLiNER2.5 | One entity label per field, with the definition as its description. A scalar field takes the most confident span; a list field takes every span | 1,800-character chunks that overlap by 300 characters |
+| d1-2B | One `system_one` read question per field (text, number, date; money as a number with its unit; time and duration as text), the definition as `instructions`, one forward pass with no generated tokens. Every read keeps its likeliest span, and a field answers when its calibrated `found` reaches 0.5 (`open_extractors.D1_FOUND`). d1 has no list read, so a list field gets one value | The whole document (128k context; the longest v0.1 document is under 13k tokens) |
 
-The open-weight models decode greedily, at temperature 0. Nobody tuned any system's prompt on test items. Levanto
+The generative open-weight models decode greedily, at temperature 0. Nobody tuned any system's prompt on test items. Levanto
 fitted Sage 2's abstention thresholds on the `fit` half (see §6).
 
 ## 4. Scoring one field

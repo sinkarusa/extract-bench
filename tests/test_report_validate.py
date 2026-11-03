@@ -48,7 +48,7 @@ def test_report_reproduces_published_board():
     b = R.board(RESULTS / "v0.1", "v0.1", "eval")
     text = b["boards"]["text"]
     assert {k: round(v, 1) for k, v in text["mean"].items()} == {
-        "sage2": 77.8, "clairic": 75.3, "nuextract3": 76.1, "schematron3b": 59.9, "gliner25": 35.7}
+        "sage2": 77.8, "clairic": 75.3, "nuextract3": 76.1, "schematron3b": 59.9, "gliner25": 35.7, "d1_2b": 63.5}
     assert len(text["mean_sets"]) == 10 and "sroie" not in text["mean_sets"]
     d = text["mean_diff_vs_ref"]["clairic"]
     assert (round(d["ci95"][0], 1), round(d["ci95"][1], 1), d["sig"]) == (-5.4, 0.2, False)

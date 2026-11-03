@@ -109,6 +109,13 @@ def test_money_cents_tolerance():
     assert S.exact_norm(-12.345, -12.35, "money") == 1
 
 
+def test_money_huge_pred_scores_wrong_not_crash():
+    # a multi-line table span parses to ~2.4e27, beyond Decimal's default 28-digit quantize precision
+    span = "24,493\n4,931\nNet receipts\n(4,799)\n(12,183)\n(16,982)\n12,825"
+    assert S.exact_norm(span, "24493.00", "money") == 0
+    assert S.exact_norm(1e300, 1e300, "money") == 1
+
+
 def test_gold_unparseable_date_unscored():
     item = {"id": "v", "dataset": "vrdu", "metric": "exact_norm", "fields": [
         {"name": "d1", "type": "date", "gold": "10121116"}, {"name": "d2", "type": "date", "gold": "Auguit9.2016"},
