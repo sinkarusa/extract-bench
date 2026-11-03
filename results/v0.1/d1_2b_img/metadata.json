@@ -1,0 +1,15 @@
+{
+ "system": "d1_2b_img",
+ "benchmark_version": "v0.1",
+ "display_name": "d1-2B + image",
+ "org": "Liquid AI",
+ "model": "LiquidAI/d1-2B",
+ "arm": "d1_2b_img",
+ "input": "image+text",
+ "run_date": "2026-11-02",
+ "open_weights": true,
+ "maintainer_product": false,
+ "notes": "clairic_vision_ocr's input: the item's original page files (<= 4, Clairic's size checks) as system_one media plus the same text and questions as d1_2b; image sets only. d1 caps each picture at its trained 1,638,400 px (checkpoint config); a run with the cap lifted to 16,777,216 px scored 62.9 vs 63.2, so the default is published. Pages rebuilt with each dataset's build.py: FATURA, OmniAI, DocVQA, SROIE, CORD byte-identical to the item metadata; VRDU 664/722 and RealDoc 169/180 byte-identical (others: same pixels, different font/JPEG library bytes). Same runtime and found >= 0.5 cut as d1_2b. Not tuned.",
+ "tier": "self-reported",
+ "n_items": 1457
+}

@@ -12,6 +12,8 @@ Method (v0.1):
   headline is the mean of datasets, receipts (SROIE, CORD) excluded.
 - Uncertainty: item-paired bootstrap per dataset (2,000 resamples, seed 20) for each system minus the reference;
   for the mean of datasets, items are resampled within each dataset (stratified), same count and seed.
+- `--exclude-garbled-ocr`: also drop, for every system, the fields results/<version>/garbled_ocr.json flags: the
+  answer is printed but the OCR text holds it only misread (scripts/flag_garbled_ocr.py). Writes board.no_garbled_ocr.*.
 """
 from __future__ import annotations
 
@@ -29,7 +31,7 @@ DATASET_ORDER = ["fatura", "omniai", "docvqa", "vrdu", "realdoc", "kleister_nda"
 BOARDS = {
     "headline": (["sage2", "clairic"], "sage2", None),
     "text": (["sage2", "clairic", "nuextract3", "schematron3b", "gliner25", "d1_2b"], "sage2", None),
-    "image": (["sage2", "clairic_img"], "sage2", IMAGE_SETS),
+    "image": (["sage2", "clairic_img", "d1_2b_img"], "sage2", IMAGE_SETS),
 }
 N_BOOT, SEED = 2000, 20
 
@@ -67,7 +69,7 @@ def _acc(rows, j):
     return 100 * sum(r[j] for it in rows for r in it) / sum(len(it) for it in rows)
 
 
-def compare(systems, ref, items, split_ids, recs):
+def compare(systems, ref, items, split_ids, recs, exclude=None):
     rows, absent = [], {s: [0, 0] for s in systems}
     for iid in split_ids:
         it = items.get(iid)
@@ -76,7 +78,7 @@ def compare(systems, ref, items, split_ids, recs):
         fs = [field_scores(it, recs[s].get((it["dataset"], iid))) for s in systems]
         if any(f is None for f in fs):
             continue
-        keys = sorted(set.intersection(*(set(f) for f in fs)))
+        keys = sorted(set.intersection(*(set(f) for f in fs)) - set((exclude or {}).get((it["dataset"], iid), ())))
         if not keys:
             continue
         rows.append([tuple(f[k][0] for f in fs) for k in keys])
@@ -104,7 +106,13 @@ def compare(systems, ref, items, split_ids, recs):
     return res
 
 
-def board(results: Path, version: str, split: str) -> dict:
+def load_garbled(results: Path) -> dict:
+    """{(dataset, id): {field, ...}} from garbled_ocr.json (scripts/flag_garbled_ocr.py)."""
+    g = json.loads((results / "garbled_ocr.json").read_text())
+    return {(ds, iid): set(fs) for ds, v in g["datasets"].items() for iid, fs in v["flags"].items()}
+
+
+def board(results: Path, version: str, split: str, exclude: dict | None = None) -> dict:
     sp = load_split(version)
     names = sorted({s for v in BOARDS.values() for s in v[0]})
     meta, recs = {}, {}
@@ -112,6 +120,8 @@ def board(results: Path, version: str, split: str) -> dict:
         if (results / s / "metadata.json").exists():
             meta[s], recs[s] = load_system(results, s)
     out = {"version": version, "split": split, "systems": meta, "boards": {}}
+    if exclude is not None:
+        out["excluded"] = {"rule": "garbled_ocr", "flagged_fields": sum(len(v) for v in exclude.values())}
     for bname, (systems, ref, only) in BOARDS.items():
         if not all(s in recs for s in systems):
             continue
@@ -121,7 +131,7 @@ def board(results: Path, version: str, split: str) -> dict:
                 continue
             ids = sp[ds]["eval"] if split == "eval" else sp[ds]["eval"] + sp[ds]["fit"]
             items = {it["id"]: it for it in load_items(ds)}
-            r = compare(systems, ref, items, sorted(ids), recs)
+            r = compare(systems, ref, items, sorted(ids), recs, exclude)
             if r:
                 B["datasets"][ds] = r
         sets = [d for d in B["datasets"] if d not in RECEIPTS]
@@ -160,10 +170,12 @@ def _sg(v):
 
 
 def to_markdown(b: dict) -> str:
-    md = [f"# Extract Bench {b['version']} board ({b['split']} split)", "",
+    md = [f"# Extract Bench {b['version']} board ({b['split']} split{', garbled OCR excluded' if 'excluded' in b else ''})", "",
           "`extract-bench report` generates this file. Each cell is field accuracy in percent under rule (a), on "
           "headline fields. A ✱ means the 95% bootstrap interval of the difference from the reference excludes 0. "
-          "The means leave out the receipt sets.", ""]
+          "The means leave out the receipt sets."
+          + (" Fields whose answer the OCR text holds only misread (results/v0.1/garbled_ocr.json) are dropped for "
+             "every system." if "excluded" in b else ""), ""]
     for bname, B in b["boards"].items():
         names = [b["systems"][s]["display_name"] for s in B["systems"]]
         ref = b["systems"][B["reference"]]["display_name"]
@@ -189,7 +201,8 @@ def to_terminal(b: dict, board_name: str = "text") -> str:
     B = b["boards"][board_name]
     rows = sorted(B["systems"], key=lambda s: -B["mean"][s])
     w = max(len(b["systems"][s]["display_name"]) for s in rows)
-    out = [f"Extract Bench {b['version']} · {board_name} board · {b['split']} split · mean of {len(B['mean_sets'])} datasets", ""]
+    out = [f"Extract Bench {b['version']} · {board_name} board · {b['split']} split · mean of {len(B['mean_sets'])} datasets"
+           + (" · garbled OCR excluded" if "excluded" in b else ""), ""]
     out.append(f"{'#':>2}  {'system':<{w}}  {'acc':>5}  {'Δ vs ' + b['systems'][B['reference']]['display_name']:>22}  "
                f"{'not-in-doc':>10}")
     for i, s in enumerate(rows, 1):
@@ -212,12 +225,14 @@ def main(argv=None):
     ap.add_argument("--split", choices=("eval", "all"), default="eval")
     ap.add_argument("--board", default="text", help="board to print (headline | text | image)")
     ap.add_argument("--no-write", action="store_true", help="print only; don't write board.json / board.md")
+    ap.add_argument("--exclude-garbled-ocr", action="store_true",
+                    help="drop the fields garbled_ocr.json flags (answer printed, OCR text misread it), for every system")
     a = ap.parse_args(argv)
     results = a.results or RESULTS / a.version
-    b = board(results, a.version, a.split)
+    b = board(results, a.version, a.split, load_garbled(results) if a.exclude_garbled_ocr else None)
     print(to_terminal(b, a.board))
     if not a.no_write:
-        suffix = "" if a.split == "eval" else f".{a.split}"
+        suffix = ("" if a.split == "eval" else f".{a.split}") + (".no_garbled_ocr" if a.exclude_garbled_ocr else "")
         (results / f"board{suffix}.json").write_text(json.dumps(b, indent=1) + "\n")
         (results / f"board{suffix}.md").write_text(to_markdown(b))
         print(f"\nwrote {results / f'board{suffix}.json'} and board{suffix}.md")

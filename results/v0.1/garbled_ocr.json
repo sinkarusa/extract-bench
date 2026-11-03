@@ -1,0 +1,1762 @@
+{
+ "version": "v0.1",
+ "rule": "A field is flagged when ALL hold:\n  1. its dataset's text is OCR (native-text datasets are never flagged);\n  2. it has a gold value (a \"not in the document\" field is never flagged), the scorer can parse that gold, and\n     the gold is not a pick from fixed options (RealDoc's checkbox states are not printed text);\n  3. no span of the text the systems read is scored correct by the scorer (`score.exact_norm`, which already ignores\n     case, spacing, punctuation, date and money formats), and the gold's alphanumerics don't occur in the text;\n  4. a span a few OCR misreads away IS scored correct:\n     - text: the gold's alphanumerics (case-folded) align to a stretch of the text's alphanumerics with at most\n       max(1, 20%) character edits, all of them misreads: a digit only swaps with its look-alike letter (0/O, 1/l/I,\n       5/S, 8/B/S, ...), never with another digit (as likely a different value printed on the page); no digit is\n       added or dropped; no 2+ consecutive characters are added or dropped and no edits touch 3+ consecutive\n       characters (a whole word added, missing or different is a reworded gold, not a misread); no two adjacent\n       characters are swapped (a typing slip in the gold); the gold's first and last characters are present (a\n       missing end is a different span boundary); the match covers whole OCR words (HTML tags aside), so it never\n       borrows a letter from the next word;\n     - number / money / date / time / datetime: fixing at most 2 OCR confusions (letter read as a digit inside a\n       digit-bearing token, digit read as a letter inside a word, a dropped decimal point) makes the scorer accept\n       the span. A digit replaced by another digit never counts.\n  A list field is flagged when one of its gold items is garbled and none is missing outright.",
+ "datasets": {
+  "fatura": {
+   "counts": {
+    "clean": 760,
+    "garbled": 15,
+    "absent": 87,
+    "skip": 0
+   },
+   "flags": {
+    "fatura-T50-I6": {
+     "buyer_name": {
+      "gold": "Jeffrey Strickland",
+      "ocr": "Joffrey Strickland",
+      "start": 26,
+      "end": 44
+     }
+    },
+    "fatura-T50-I172": {
+     "buyer_name": {
+      "gold": "Jill Valenzuela",
+      "ocr": "Jil Valenzuela",
+      "start": 187,
+      "end": 201
+     }
+    },
+    "fatura-T7-I51": {
+     "invoice_number": {
+      "gold": "2Y4M4d-745",
+      "ocr": "2¥4M4d-745",
+      "start": 114,
+      "end": 124
+     }
+    },
+    "fatura-T7-I81": {
+     "invoice_number": {
+      "gold": "3Y8M6d-512",
+      "ocr": "3Y8M6a-512",
+      "start": 124,
+      "end": 134
+     }
+    },
+    "fatura-T7-I85": {
+     "invoice_number": {
+      "gold": "4Y4M5d-247",
+      "ocr": "4¥4M5d-247",
+      "start": 221,
+      "end": 231
+     }
+    },
+    "fatura-T7-I174": {
+     "invoice_number": {
+      "gold": "2Y8M6d-815",
+      "ocr": "2¥8M6d-815",
+      "start": 118,
+      "end": 128
+     }
+    },
+    "fatura-T32-I52": {
+     "invoice_number": {
+      "gold": "INV/56-76/337",
+      "ocr": "INV/S6-76/337",
+      "start": 327,
+      "end": 340
+     }
+    },
+    "fatura-T39-I56": {
+     "invoice_number": {
+      "gold": "9Y5M7d-429",
+      "ocr": "9YSM7d-429",
+      "start": 189,
+      "end": 199
+     }
+    },
+    "fatura-T2-I76": {
+     "invoice_number": {
+      "gold": "5Y6M3d-136",
+      "ocr": "SY6M30-136",
+      "start": 380,
+      "end": 390
+     }
+    },
+    "fatura-T12-I88": {
+     "invoice_number": {
+      "gold": "INV/36-49/771",
+      "ocr": "INVI36-49/771",
+      "start": 20,
+      "end": 33
+     }
+    },
+    "fatura-T12-I110": {
+     "invoice_number": {
+      "gold": "8Y2M5d-329",
+      "ocr": "8Y2Msd-329",
+      "start": 24,
+      "end": 34
+     }
+    },
+    "fatura-T49-I146": {
+     "invoice_number": {
+      "gold": "INV00798533",
+      "ocr": "INVOO798533",
+      "start": 234,
+      "end": 245
+     }
+    },
+    "fatura-T10-I6": {
+     "invoice_number": {
+      "gold": "INV/55-24/340",
+      "ocr": "INVI55-24/340",
+      "start": 97,
+      "end": 110
+     }
+    },
+    "fatura-T25-I40": {
+     "invoice_number": {
+      "gold": "3Y8M5d-616",
+      "ocr": "3Y8M50-616",
+      "start": 174,
+      "end": 184
+     }
+    },
+    "fatura-T25-I70": {
+     "invoice_number": {
+      "gold": "INV/25-15/770",
+      "ocr": "INVI25-15/770",
+      "start": 252,
+      "end": 265
+     }
+    }
+   }
+  },
+  "omniai": {
+   "counts": {
+    "clean": 2849,
+    "garbled": 52,
+    "absent": 83,
+    "skip": 0
+   },
+   "flags": {
+    "omniai-0103": {
+     "mostRecentShipment__additionalCharges__amount": {
+      "gold": 8.05,
+      "ocr": "HANDLING</td>\n<td>FEE 805",
+      "start": 8634,
+      "end": 8659,
+      "fixed": "HANDLING</td>\n<td>FEE 8.05"
+     },
+     "mostRecentShipment__additionalCharges__description": {
+      "gold": "OUT-OF-HOURS DELIVERY FEE",
+      "ocr": "OUT-OF-HOURS DELIVERY FFE",
+      "start": 8312,
+      "end": 8337
+     }
+    },
+    "omniai-0136": {
+     "documentNumber": {
+      "gold": "OY2N0HS8AC",
+      "ocr": "OY2NOHS8AC",
+      "start": 86,
+      "end": 96
+     }
+    },
+    "omniai-0244": {
+     "documentNumber": {
+      "gold": "O98D0HQANN",
+      "ocr": "O98DOHQANN",
+      "start": 36,
+      "end": 46
+     }
+    },
+    "omniai-0489": {
+     "documentNumber": {
+      "gold": "PCX1UVJRUZ",
+      "ocr": "PCXIUVJRUZ",
+      "start": 42,
+      "end": 52
+     }
+    },
+    "omniai-0586": {
+     "mostRecentShipment__sender__company": {
+      "gold": "Kuvalis, Langworth And Metz",
+      "ocr": "Kuvalis, Lingworth And Metz",
+      "start": 4892,
+      "end": 4919
+     },
+     "mostRecentShipment__referenceNumber": {
+      "gold": "NSN0NILMCD",
+      "ocr": "NSNONILMCD",
+      "start": 4643,
+      "end": 4653
+     }
+    },
+    "omniai-0807": {
+     "mostRecentShipment__additionalCharges__totalVAT": {
+      "gold": 1.55,
+      "ocr": "155",
+      "start": 9282,
+      "end": 9285,
+      "fixed": "1.55"
+     }
+    },
+    "omniai-0074": {
+     "items__reference": {
+      "gold": "P0CDQOEO7L",
+      "ocr": "POCDQOEO7L",
+      "start": 1003,
+      "end": 1013
+     }
+    },
+    "omniai-0098": {
+     "header__from__reference": {
+      "gold": "DN-HH0P59WV",
+      "ocr": "DN-HHOP59WV",
+      "start": 127,
+      "end": 138
+     }
+    },
+    "omniai-0119": {
+     "items__reference": {
+      "gold": "ZMT0BTBMA6",
+      "ocr": "ZMTOBTBMA6",
+      "start": 3081,
+      "end": 3091
+     }
+    },
+    "omniai-0160": {
+     "header__to__reference": {
+      "gold": "PO-XG0IK4BW",
+      "ocr": "PO-XGOIK4BW",
+      "start": 465,
+      "end": 476
+     }
+    },
+    "omniai-0170": {
+     "items__reference": {
+      "gold": "8E5I8SOHF8",
+      "ocr": "8E518SOHF8",
+      "start": 2065,
+      "end": 2075
+     }
+    },
+    "omniai-0176": {
+     "items__reference": {
+      "gold": "V0AJ59DSKL",
+      "ocr": "VoAJ59DSKL",
+      "start": 1000,
+      "end": 1010
+     }
+    },
+    "omniai-0510": {
+     "header__from__reference": {
+      "gold": "DN-D0YLOZYE",
+      "ocr": "DN-DOYLOZYE",
+      "start": 121,
+      "end": 132
+     }
+    },
+    "omniai-0609": {
+     "items__reference": {
+      "gold": "RJXMIVH0HP",
+      "ocr": "RJXMIVHOHP",
+      "start": 1653,
+      "end": 1663
+     },
+     "header__to__reference": {
+      "gold": "PO-VYOHKL7O",
+      "ocr": "PO-VYOHKL70",
+      "start": 472,
+      "end": 483
+     }
+    },
+    "omniai-0642": {
+     "items__reference": {
+      "gold": "JDGDL0U1ST",
+      "ocr": "JDGDLOU1ST",
+      "start": 1613,
+      "end": 1623
+     }
+    },
+    "omniai-0698": {
+     "items__reference": {
+      "gold": "H9HDBZZH0I",
+      "ocr": "H9HDBZZHOI",
+      "start": 1055,
+      "end": 1065
+     },
+     "header__to__reference": {
+      "gold": "PO-F0SDGWNN",
+      "ocr": "PO-FOSDGWNN",
+      "start": 471,
+      "end": 482
+     }
+    },
+    "omniai-0852": {
+     "items__reference": {
+      "gold": "1WUJ3HYKR0",
+      "ocr": "1WUJ3HYKRO",
+      "start": 2221,
+      "end": 2231
+     }
+    },
+    "omniai-0945": {
+     "header__to__tel": {
+      "gold": "1-753-960-4505 x909",
+      "ocr": "1-753-960-4505 ×909",
+      "start": 613,
+      "end": 632
+     }
+    },
+    "omniai-0021": {
+     "store_info__name": {
+      "gold": "McDonald's South Africa, Restaurant #197019, Isando",
+      "ocr": "McDonald's South Afr ca\nRestaurant # 197019.\nIsando",
+      "start": 8,
+      "end": 59
+     }
+    },
+    "omniai-0039": {
+     "items__description": {
+      "gold": "COMESSA T/ILLA WHT WRAPS 8S",
+      "ocr": "COMESSA T/TILLA WHT WRAPS 8S",
+      "start": 206,
+      "end": 234
+     }
+    },
+    "omniai-0056": {
+     "cashier_info__name": {
+      "gold": "Ntswiki Mogadime",
+      "ocr": "Ntswaki Mogadime",
+      "start": 1603,
+      "end": 1619
+     }
+    },
+    "omniai-0134": {
+     "items__description": {
+      "gold": "SAVEMOR CARRIER 1'S",
+      "ocr": "SAVEMOR CARRIER</td>\n<td>T's",
+      "start": 411,
+      "end": 439
+     }
+    },
+    "omniai-0853": {
+     "driver_license_number": {
+      "gold": "I1234568",
+      "ocr": "11234568",
+      "start": 109,
+      "end": 117
+     }
+    },
+    "omniai-0724": {
+     "distribution__direct_accounts_outside_region__name_of_account": {
+      "gold": "Phillip's 66",
+      "ocr": "Philip's 66",
+      "start": 2560,
+      "end": 2571
+     }
+    },
+    "omniai-0017": {
+     "check__bankInfo__bank": {
+      "gold": "WELLS_FARGO",
+      "ocr": "WELLES\nFARGO",
+      "start": 72,
+      "end": 84
+     }
+    },
+    "omniai-0143": {
+     "check__bankInfo__bank": {
+      "gold": "CITIBANK",
+      "ocr": "cítìbank",
+      "start": 76,
+      "end": 84
+     }
+    },
+    "omniai-0289": {
+     "check__bankInfo__bank": {
+      "gold": "CITIBANK",
+      "ocr": "cítìbank",
+      "start": 75,
+      "end": 83
+     }
+    },
+    "omniai-0065": {
+     "lessor__name": {
+      "gold": "Mrs. Patti Fay MD",
+      "ocr": "Mrs. Pazzi Fay MD",
+      "start": 98,
+      "end": 115
+     }
+    },
+    "omniai-0947": {
+     "premises__spaceType": {
+      "gold": "Retail Space",
+      "ocr": "RETAL SPACE",
+      "start": 577,
+      "end": 588
+     }
+    },
+    "omniai-0793": {
+     "lessee__name": {
+      "gold": "Rau, Goodwin and Jacobi",
+      "ocr": "Raul, Goodwin and Jacobi",
+      "start": 231,
+      "end": 255
+     }
+    },
+    "omniai-0916": {
+     "lessor__name": {
+      "gold": "Nick Wuckert I",
+      "ocr": "Nick Duckert\nI",
+      "start": 100,
+      "end": 114
+     }
+    },
+    "omniai-0072": {
+     "signatures__residence": {
+      "gold": "992 Conn Brooks",
+      "ocr": "992 Cann Brooks",
+      "start": 1145,
+      "end": 1160
+     }
+    },
+    "omniai-0182": {
+     "signatures__town": {
+      "gold": "Lake Breana",
+      "ocr": "LAKE BREANN",
+      "start": 1561,
+      "end": 1572
+     },
+     "signatures__printName": {
+      "gold": "Kevon Collins",
+      "ocr": "Kevan Collins",
+      "start": 1087,
+      "end": 1100
+     }
+    },
+    "omniai-0339": {
+     "signatures__town": {
+      "gold": "Lake Norval",
+      "ocr": "Lake Normal",
+      "start": 1891,
+      "end": 1902
+     }
+    },
+    "omniai-0406": {
+     "signatures__town": {
+      "gold": "East Ebbacester",
+      "ocr": "East Ebbacestea",
+      "start": 1421,
+      "end": 1436
+     },
+     "signatures__printName": {
+      "gold": "Freddy Beier",
+      "ocr": "Freddy Beien",
+      "start": 1750,
+      "end": 1762
+     }
+    },
+    "omniai-0472": {
+     "witness__residence": {
+      "gold": "4625 Franey Union, 39557",
+      "ocr": "4625 Francy Union, 39557.",
+      "start": 2144,
+      "end": 2169
+     },
+     "signatures__printName": {
+      "gold": "Cristian Steuber",
+      "ocr": "Cristian Steaber",
+      "start": 1584,
+      "end": 1600
+     },
+     "signatures__residence": {
+      "gold": "3438 Joanny Mews",
+      "ocr": "3438 JOANNY NEWS",
+      "start": 996,
+      "end": 1012
+     }
+    },
+    "omniai-0488": {
+     "signatures__town": {
+      "gold": "Emardside",
+      "ocr": "Emandside",
+      "start": 1539,
+      "end": 1548
+     },
+     "signatures__printName": {
+      "gold": "Adrianna Ledner",
+      "ocr": "Adrianna Redner",
+      "start": 1569,
+      "end": 1584
+     }
+    },
+    "omniai-0670": {
+     "witness__name": {
+      "gold": "Mrs. Yvette Schulist",
+      "ocr": "Mrs. Guette Schulist",
+      "start": 2127,
+      "end": 2147
+     },
+     "signatures__town": {
+      "gold": "Christianaboro",
+      "ocr": "Christianabono",
+      "start": 1550,
+      "end": 1564
+     },
+     "signatures__printName": {
+      "gold": "Evert Jones",
+      "ocr": "Event Jones",
+      "start": 1091,
+      "end": 1102
+     }
+    },
+    "omniai-0771": {
+     "signatures__town": {
+      "gold": "Lake Arnefield",
+      "ocr": "Lake Arrefield",
+      "start": 1279,
+      "end": 1293
+     },
+     "signatures__printName": {
+      "gold": "Noemi Heathcote-Reichel",
+      "ocr": "Norme Heathcote Reichel",
+      "start": 1054,
+      "end": 1077
+     }
+    },
+    "omniai-0875": {
+     "signatures__residence": {
+      "gold": "98943 Hauck Road",
+      "ocr": "98943 Hauch Road",
+      "start": 991,
+      "end": 1007
+     }
+    }
+   }
+  },
+  "docvqa": {
+   "counts": {
+    "clean": 230,
+    "garbled": 10,
+    "absent": 38,
+    "skip": 0
+   },
+   "flags": {
+    "docvqa-val-42227": {
+     "answer": {
+      "gold": "feb - 8 2010",
+      "ocr": "RED - 8 2010",
+      "start": 25,
+      "end": 37
+     }
+    },
+    "docvqa-val-64554": {
+     "answer": {
+      "gold": "Percentage Production of New Hampshire pullets during trial 7 .",
+      "ocr": "Percentage\nproduction\nof\nNew Hampshire pullets\nduring\ntrigl\n7",
+      "start": 150,
+      "end": 211
+     }
+    },
+    "docvqa-val-64143": {
+     "answer": {
+      "gold": "Arginine-HCl",
+      "ocr": "Arginine-HCI",
+      "start": 159,
+      "end": 171
+     }
+    },
+    "docvqa-val-3047": {
+     "answer": {
+      "gold": "Married - Dale",
+      "ocr": "Married . - Pale.",
+      "start": 1613,
+      "end": 1630
+     }
+    },
+    "docvqa-val-5714": {
+     "answer": {
+      "gold": "Richard Flemming",
+      "ocr": "Richard Filemming/",
+      "start": 3156,
+      "end": 3174
+     }
+    },
+    "docvqa-val-60625": {
+     "answer": {
+      "gold": "20 feb",
+      "ocr": "20 Fee",
+      "start": 52,
+      "end": 58
+     }
+    },
+    "docvqa-val-5811": {
+     "answer": {
+      "gold": "1125 St.Mary St.",
+      "ocr": "1125 St. many st",
+      "start": 415,
+      "end": 431
+     }
+    },
+    "docvqa-val-56462": {
+     "answer": {
+      "gold": "N.Y.U. MEDICAL CENTER",
+      "ocr": "N . Y. V. MEDICAL\nCENTER",
+      "start": 299,
+      "end": 323
+     }
+    },
+    "docvqa-val-5586": {
+     "answer": {
+      "gold": "Daniel Johnson",
+      "ocr": "DANial Johnson",
+      "start": 8,
+      "end": 22
+     }
+    },
+    "docvqa-val-50309": {
+     "answer": {
+      "gold": "dr. darby",
+      "ocr": "Der. Darby",
+      "start": 4,
+      "end": 14
+     }
+    }
+   }
+  },
+  "vrdu": {
+   "counts": {
+    "clean": 1556,
+    "garbled": 2,
+    "absent": 37,
+    "skip": 0
+   },
+   "flags": {
+    "vrdu-adbuy-1674e8d0-157cb67f": {
+     "line_program_desc": {
+      "gold": "FOX17-TH -MRN B< B",
+      "ocr": "FOX17-TH MRN C<",
+      "start": 1254,
+      "end": 1269
+     }
+    },
+    "vrdu-adbuy-23a5de85-d26addaf": {
+     "line_program_desc": {
+      "gold": "5p M-M-F News",
+      "ocr": "5p M-F News",
+      "start": 4857,
+      "end": 4868
+     }
+    }
+   }
+  },
+  "realdoc": {
+   "counts": {
+    "clean": 257,
+    "garbled": 5,
+    "absent": 74,
+    "skip": 88
+   },
+   "flags": {
+    "realdoc-finance_q225": {
+     "class_of_tax": {
+      "gold": "Payment on 1925 Income",
+      "ocr": "Payment om 1925 Income.",
+      "start": 75,
+      "end": 98
+     }
+    },
+    "realdoc-finance_q74": {
+     "legend_firms": {
+      "gold": "Deloitte, EY, PwC, KPMG",
+      "ocr": "—@-Deloitte —g-EY -@-PwC -@-KPMG",
+      "start": 1074,
+      "end": 1106
+     }
+    },
+    "realdoc-mortgage_q50": {
+     "primary_phone_and_type": {
+      "gold": "(602) 555-0289 Cell",
+      "ocr": "(602) 555-0289 Celt",
+      "start": 1762,
+      "end": 1781
+     }
+    },
+    "realdoc-supply_chain_q190": {
+     "Weight_sub_To_Corr_Pallets_Gaylords": {
+      "gold": "22523.44lb",
+      "ocr": "22523.44Ib",
+      "start": 766,
+      "end": 776
+     }
+    },
+    "realdoc-supply_chain_q182": {
+     "Terminal_Address_City": {
+      "gold": "National City",
+      "ocr": "Nation}l City",
+      "start": 2206,
+      "end": 2219
+     }
+    }
+   }
+  },
+  "kleister_charity": {
+   "counts": {
+    "clean": 535,
+    "garbled": 17,
+    "absent": 57,
+    "skip": 0
+   },
+   "flags": {
+    "kleister_charity-3f3b198e30521fc74f4cd89e8ce817a4": {
+     "address__postcode": {
+      "gold": "KT10 4AD",
+      "ocr": "KT1O 4AD",
+      "start": 254,
+      "end": 262
+     }
+    },
+    "kleister_charity-ce5c63d4633e475678d584b358c66f60": {
+     "address__postcode": {
+      "gold": "LN11 0BX",
+      "ocr": "LN11 OBX",
+      "start": 1043,
+      "end": 1051
+     }
+    },
+    "kleister_charity-48f9c8af49949c27723b98808ccffbdf": {
+     "address__postcode": {
+      "gold": "YO12 6PT",
+      "ocr": "Y 012 6PT",
+      "start": 961,
+      "end": 970
+     }
+    },
+    "kleister_charity-91f812cade41f0e0d9012403cd615449": {
+     "address__postcode": {
+      "gold": "LA5 0DF",
+      "ocr": "LA5 ODF",
+      "start": 1186,
+      "end": 1193
+     }
+    },
+    "kleister_charity-f0deedb68079235e849456d8081f79a9": {
+     "charity_name": {
+      "gold": "Beckett's and Sargeant's Educational Foundation",
+      "ocr": "Beckett's and Sargeant's Educationa Foundation",
+      "start": 17020,
+      "end": 17066
+     }
+    },
+    "kleister_charity-6f8d7bb0affa1d0c4d062a961592e317": {
+     "address__postcode": {
+      "gold": "BS5 0HE",
+      "ocr": "BS5 OHE",
+      "start": 3633,
+      "end": 3640
+     }
+    },
+    "kleister_charity-f529c080fc577b169f995ec5016fdb6a": {
+     "address__postcode": {
+      "gold": "YO12 6PT",
+      "ocr": "Y012 6PT",
+      "start": 1010,
+      "end": 1018
+     }
+    },
+    "kleister_charity-bcd1190e3466f2c2b3d6353e1577ce11": {
+     "charity_name": {
+      "gold": "Droylsden and District Foodbank",
+      "ocr": "Droyisden and District foodbank",
+      "start": 662,
+      "end": 693
+     }
+    },
+    "kleister_charity-beb5f21cde76467a1d289fed3fc767ff": {
+     "address__street_line": {
+      "gold": "55 CHARLOTTE ROAD",
+      "ocr": "55 Chartotte Road",
+      "start": 542,
+      "end": 559
+     }
+    },
+    "kleister_charity-9bea038bc6fecc5b6008fa332b24319f": {
+     "address__street_line": {
+      "gold": "2 BISHOPSTOKE ROAD",
+      "ocr": "2 Blshopstoke Road,",
+      "start": 1601,
+      "end": 1620
+     }
+    },
+    "kleister_charity-b7acbd5f429329caa2a7fdf97dbf8290": {
+     "address__postcode": {
+      "gold": "NW9 0XD",
+      "ocr": "NW9 OXD",
+      "start": 1348,
+      "end": 1355
+     }
+    },
+    "kleister_charity-64978fcaa1a58c07244818bab07c85c6": {
+     "address__postcode": {
+      "gold": "YO12 6PT",
+      "ocr": "Y012 6PT",
+      "start": 943,
+      "end": 951
+     }
+    },
+    "kleister_charity-0829a46c0a923128837de07d7dcb5c0f": {
+     "address__postcode": {
+      "gold": "CV37 9SW",
+      "ocr": "CV37 9ASW",
+      "start": 14807,
+      "end": 14816
+     }
+    },
+    "kleister_charity-ab2945fcc4c30e3879acb917e36e4725": {
+     "address__postcode": {
+      "gold": "BS5 0HE",
+      "ocr": "BS5 OHE",
+      "start": 3680,
+      "end": 3687
+     }
+    },
+    "kleister_charity-56925ace7745a1e76749da759ca2852c": {
+     "address__street_line": {
+      "gold": "BURNLEE ROAD",
+      "ocr": "Burntee Road,",
+      "start": 2996,
+      "end": 3009
+     }
+    },
+    "kleister_charity-7841b41a28c388caa3ae0260cf0a37eb": {
+     "address__postcode": {
+      "gold": "TQ6 0EA",
+      "ocr": "TQ6 OEA",
+      "start": 1535,
+      "end": 1542
+     }
+    },
+    "kleister_charity-bdec303cb4a08b3c24839fbc11f7cb1d": {
+     "address__street_line": {
+      "gold": "99 BRANBURRY ROAD",
+      "ocr": "99 Banbury Road",
+      "start": 693,
+      "end": 708
+     }
+    }
+   }
+  },
+  "sroie": {
+   "counts": {
+    "clean": 713,
+    "garbled": 98,
+    "absent": 285,
+    "skip": 0
+   },
+   "flags": {
+    "sroie-X00016469670": {
+     "address": {
+      "gold": "NO 2 & 4, JALAN BAYU 4, BANDAR SERI ALAM, B1750 MASAI, JOHOR",
+      "ocr": "NO 2 & 4, JALAN BAYU 4,\nBANDAR SERI ALAM,\n81750 MASAI, JOHOR",
+      "start": 66,
+      "end": 126
+     }
+    },
+    "sroie-X51005230605": {
+     "address": {
+      "gold": "KM 458.4 BKT LANJAN UTARA, L/RAYA UTARA SELATAN,SG BULOH 47000 SUNGAI BUL",
+      "ocr": "KM 458.4 BKT LANJAN UTARA,\nL/RAYA UTARA SELATAN,SG BULOH\n\n47000 SUNGAT BUL",
+      "start": 79,
+      "end": 153
+     }
+    },
+    "sroie-X51005230657": {
+     "company": {
+      "gold": "CROSS CHANNEL NETWORK SDN. BHD.",
+      "ocr": "CROSS CHANNEL NE/WORK SDN. BHD.",
+      "start": 0,
+      "end": 31
+     }
+    },
+    "sroie-X51005268275": {
+     "address": {
+      "gold": "NO: 28, JALAN ASTANA 1C, BANDAR BUKIT RAJA, 41050 KLANG SELANGOR D.E, MALAYSIA",
+      "ocr": "No: 28, TALAN ASTANA 1C\nBANDAR BUKIT RAJA, 41050\n\nKLANG SELANGOR D.E, MALAYSIA",
+      "start": 26,
+      "end": 104
+     }
+    },
+    "sroie-X51005301666": {
+     "address": {
+      "gold": "NO: 28, JALAN ASTANA 1C, BANDAR BUKIT RAJA, 41050 KLANG SELANGOR D.E, MALAYSIA",
+      "ocr": "No: 28, TALAN ASTANA 1C\nBANDAR BUKIT RAJA, 41050\n\nKLANG SELANGOR D.E, MALAYSIA",
+      "start": 26,
+      "end": 104
+     }
+    },
+    "sroie-X51005433548": {
+     "company": {
+      "gold": "PASAR MINI JIN SENG",
+      "ocr": "PASAR MINI JIW SENG",
+      "start": 0,
+      "end": 19
+     }
+    },
+    "sroie-X51005442388": {
+     "company": {
+      "gold": "CONTENTO",
+      "ocr": "CONTENT GO",
+      "start": 7,
+      "end": 17
+     }
+    },
+    "sroie-X51005444044": {
+     "address": {
+      "gold": "LOT P.T. 2811, JALAN ANGSA, TAMAN BERKELEY 41150 KLANG, SELANGOR 1572-TMN BKT PANDAN",
+      "ocr": "LOT P.7. 2811, JALAN ANGSA,\nTAMAN BERKELEY\n41150 KLANG, SELANGOR\n1572-THN BRKT PANDAN",
+      "start": 29,
+      "end": 114
+     }
+    },
+    "sroie-X51005447844": {
+     "company": {
+      "gold": "RESTAURANT JIAWEI JIAWEI HOUSE",
+      "ocr": "RESTAURANT JIAWE|\nJIAWE! HOUSE",
+      "start": 3,
+      "end": 33
+     }
+    },
+    "sroie-X51005605295": {
+     "address": {
+      "gold": "LOT GO1, KL FESTIVAL CITY, NO. 67 JIN IBU KOTA TMN DANAU KOTA, KL",
+      "ocr": "Lot G01, KL Festival City,\nNo. 67 JIn Ibu Kata Ta Danau Kata, KL",
+      "start": 58,
+      "end": 122
+     }
+    },
+    "sroie-X51005663274": {
+     "address": {
+      "gold": "NO 7, SIMPANG OFF BATU VILLAGE, JALAN IPOH BATU 5, 51200 KUALA LUMPUR. MALAYSIA",
+      "ocr": "No 7, Simpang Off Batu Village,\nJalan {pon Batu 5, 51200 Kuala Lumpur.\nMALAYSIA",
+      "start": 49,
+      "end": 128
+     }
+    },
+    "sroie-X51005663300": {
+     "address": {
+      "gold": "NO 7, SIMPANG OFF BATU VILLAGE, JALAN IPOH BATU 5, 51200 KUALA LUMPUR MALAYSIA",
+      "ocr": "No 7. Simpdng Off Batu Village,\nJalan Ipoh Batu 5, 51200 Kuala Lumpur\nMALAYSIA",
+      "start": 44,
+      "end": 122
+     }
+    },
+    "sroie-X510056849111": {
+     "company": {
+      "gold": "WESTERN EASTERN STATIONERY SDN. BHD",
+      "ocr": "WESTERN EASTERN\nSTATIONERY SON. BHD",
+      "start": 9,
+      "end": 44
+     }
+    },
+    "sroie-X51005684949": {
+     "company": {
+      "gold": "WESTERN EASTERN STATIONERY SDN. BHD",
+      "ocr": "WESTERN EASTERN\nSTATIONERY SON. BHD",
+      "start": 9,
+      "end": 44
+     }
+    },
+    "sroie-X51005715455": {
+     "company": {
+      "gold": "99 SPEED MART S/B",
+      "ocr": "99 SPEED HAPT SVB",
+      "start": 11,
+      "end": 28
+     }
+    },
+    "sroie-X51005719855": {
+     "company": {
+      "gold": "CPI ROCKU SDN. BHD.",
+      "ocr": "CPI ROCKU SCN. BHD.",
+      "start": 16,
+      "end": 35
+     }
+    },
+    "sroie-X51005719857": {
+     "address": {
+      "gold": "PUBLIKA SHOPPING GALLERY LOT 26-27 ,LEVEL G2,JLN DUTAMAS 1, SOLARIS DUTAMAS,50480 KL.",
+      "ocr": "Publika Shopping Gallery\nLot 26-27,Level G2,Jin Dutamas 1,\nSolaris Dutamas 50480 KL,",
+      "start": 59,
+      "end": 143
+     }
+    },
+    "sroie-X51005719895": {
+     "company": {
+      "gold": "GREEN LANE PHARMACY SDN BHD",
+      "ocr": "GREEN LANE PHARMACY SIN BHD",
+      "start": 0,
+      "end": 27
+     }
+    },
+    "sroie-X51005745244": {
+     "company": {
+      "gold": "URBAN IDEA SDN BHD",
+      "ocr": "URBAN IDEA SON BHO",
+      "start": 33,
+      "end": 51
+     }
+    },
+    "sroie-X51005746206": {
+     "company": {
+      "gold": "PANA JAYA ENTERPRISE",
+      "ocr": "PANA JAYA ENTEAPAISE",
+      "start": 0,
+      "end": 20
+     },
+     "address": {
+      "gold": "NO. 10-G, GROUND FLOOR. JALAN DINAR D, U3/D. TAMAN SUBANG PEADANA. SEK U3. 40150 SHAH ALAM, SELANGOR.",
+      "ocr": "NO.10-G, GROUND FLOOR. JALAN DINAR D.\nU3/D. TAMAN SUBANG PERDANA.\nSEK U3. 40150 SHAH ALAM, SELANGOR.",
+      "start": 21,
+      "end": 121
+     }
+    },
+    "sroie-X51005746210": {
+     "address": {
+      "gold": "PT17920 SEK U9, SHAH ALAM",
+      "ocr": "pti7920 Sek U9, Shah Alaa",
+      "start": 75,
+      "end": 100
+     }
+    },
+    "sroie-X51005757308": {
+     "company": {
+      "gold": "MR. D.I.Y. (M) SDN BHD",
+      "ocr": "MR. O.I.Y. (M) SDN BHD",
+      "start": 12,
+      "end": 34
+     }
+    },
+    "sroie-X51005763958": {
+     "company": {
+      "gold": "SUPER SEVEN CASH & CARRY SDN BHD",
+      "ocr": "SUPER SEVEN C4SH & CARRY SDN BHD",
+      "start": 0,
+      "end": 32
+     }
+    },
+    "sroie-X51005764031": {
+     "address": {
+      "gold": "NO. 1 JALAN EURO 1 OFF JALAN BATU TIGA SUNGAI BULOH SEKSYEN U3 SHAH ALAM, 40150",
+      "ocr": "NC. 1 Jalan Euro 1\n\nOff Jalan Batu Tiga\n\nSungai Buch Seksyen U3 Shah Alam, 40150",
+      "start": 75,
+      "end": 155
+     }
+    },
+    "sroie-X51005764154": {
+     "company": {
+      "gold": "PANA JAYA ENTERPRISE",
+      "ocr": "PANA JAYA ENTERPAI SE",
+      "start": 0,
+      "end": 21
+     },
+     "address": {
+      "gold": "NO . 10-G. GROUND FLOOR. JALAN DINAR D. U3/D TAMAN SUBANG PERDANA. SEK U3. 40150 SHAH ALAM. SELANGOR",
+      "ocr": "NO.10-G, GAQUND FLUO, JALAN DINAR 0.\nU3/D TAMAN SUBANG PERDANA.\nSEK U3, 40150 SHAH ALAM, SELANGOH",
+      "start": 22,
+      "end": 119
+     }
+    },
+    "sroie-X51005806696": {
+     "company": {
+      "gold": "IMAGE PRINTEC (M) SDN BHD",
+      "ocr": "IMAGE FPRINTEC (M) SDN BHD",
+      "start": 0,
+      "end": 26
+     }
+    },
+    "sroie-X51006328345": {
+     "company": {
+      "gold": "KING'S CONFECTIONERY S/B",
+      "ocr": "KING?S CONFECTIONERY $/B",
+      "start": 14,
+      "end": 38
+     }
+    },
+    "sroie-X51006328937": {
+     "address": {
+      "gold": "69 JALAN NOVA U5/N, SEKSYEN U5 SUBANG BE",
+      "ocr": "69 JALAN NOVA US/N, SEESYEN US SUBANG RE",
+      "start": 68,
+      "end": 108
+     }
+    },
+    "sroie-X51006328967": {
+     "company": {
+      "gold": "TANJONGMAS BOOKCENTRE (PJ) SDN BHD",
+      "ocr": "TANJONGHAS BOOKCENTRE (PJ) SDN BHD",
+      "start": 0,
+      "end": 34
+     }
+    },
+    "sroie-X51006334742": {
+     "address": {
+      "gold": "LOT L1-4 STAR AVENUE MALL JALAN ZUHAL U5/179 SEKSYEN U5 PUSAT KOMERSIAL ARENA BINTANG 40150 SHAH ALAM, SELANGOR",
+      "ocr": "iat Li-4 Star Avenue Mall\nJalan 2uha] U5/179 Seksyen U5\nPusat Komersial Arena Bintang\n40150 Shah Alam, Selangor",
+      "start": 28,
+      "end": 139
+     }
+    },
+    "sroie-X51006334766": {
+     "address": {
+      "gold": "NO 2, JALAN BULAN BM U5/BM, SEKSYEN U5, 40150 SHAH ALAM, SELANGOR",
+      "ocr": "NO Z, JALAN BULAN BM U5/BH, SEKSYEN U5.\n40150 SHAH ALAM, SELANGOR",
+      "start": 19,
+      "end": 84
+     }
+    },
+    "sroie-X51006387737": {
+     "company": {
+      "gold": "BEMED (SP) SDN. BHD.",
+      "ocr": "REMED (SP} SON. BHD.",
+      "start": 2,
+      "end": 22
+     },
+     "address": {
+      "gold": "NO.49, JALAN DINAR G U3/G, SUBANG PERDANA, 40150 SHAH ALAM, SELANGOR D.E.",
+      "ocr": "No.49, dalan Dinar G U3/G,\n\nSubang Perdana,\n40150 Shah Alam, Selangor DE.",
+      "start": 24,
+      "end": 97
+     }
+    },
+    "sroie-X51006387931": {
+     "company": {
+      "gold": "AMANO MALAYSIA SDN BHD",
+      "ocr": "AMANO MALAYSIA SON BHD",
+      "start": 13,
+      "end": 35
+     }
+    },
+    "sroie-X51006388081": {
+     "company": {
+      "gold": "KING'S CONFECTIONERY S/B",
+      "ocr": "KING?S CONFECTIONERY $/B",
+      "start": 5,
+      "end": 29
+     }
+    },
+    "sroie-X51006389894": {
+     "address": {
+      "gold": "3425, GR. FLOOR JLN THEATER, JINJANG UTARA 52100 K.L.",
+      "ocr": "3425, Gr. Floor Jin Theater,\nJinjang Utara\n52100 K.L.",
+      "start": 39,
+      "end": 92
+     }
+    },
+    "sroie-X51006389898": {
+     "company": {
+      "gold": "RESTORAN WAN SHE",
+      "ocr": "RESTORAN WAN SHF",
+      "start": 0,
+      "end": 16
+     },
+     "address": {
+      "gold": "NO. 2, JALAN TEMENGGUNG 19/9, SEKSYEN 9, BANDAR MAHKOTA CHERAS, 43200 CHERAS, SELANGOR",
+      "ocr": "No.2, Jalan Temengguna 19/9,\nSeksyen 9, Bandar Mahkota Cher as,\n43200 Cheras, Selangor",
+      "start": 29,
+      "end": 115
+     }
+    },
+    "sroie-X51006401853": {
+     "address": {
+      "gold": "LOT P.T. 2811, JALAN ANGSA, TAMAN BERKELEY 41150 KLANG, SELANGOR 1299-SUBANG PERMAI",
+      "ocr": "LOT P.T. 2811, JALAN ANGSA,\nTAMAH BERKELEY\n41150 KLANG, SELANGOR\n1299-SUBANG PERHAI",
+      "start": 36,
+      "end": 119
+     }
+    },
+    "sroie-X51006414512": {
+     "company": {
+      "gold": "BHPETROL PERMAS JAYA 2",
+      "ocr": "BHPetral Permas Jaya 2",
+      "start": 7,
+      "end": 29
+     }
+    },
+    "sroie-X51006414728": {
+     "address": {
+      "gold": "LOT LG10, AEON TAMAN UNIVERSITI SHOPPING CENTER, NO. 4, JALAN PENDIDIKAN, TAMAN UNIVERSITI 81300 SKUDAI, JOHOR",
+      "ocr": "Lot LGIO, AEON Taman Universiti\nshopping Center, No. 4, |\nJalan Pendidikan, faman Universiti\n81300 Skudai, Johor",
+      "start": 33,
+      "end": 145
+     }
+    },
+    "sroie-X51006466070": {
+     "company": {
+      "gold": "WESTERN EASTERN STATIONERY SDN. BHD",
+      "ocr": "WESTERN EASFERN\n-STATIONERY SON. BHD",
+      "start": 14,
+      "end": 50
+     }
+    },
+    "sroie-X51006502534": {
+     "company": {
+      "gold": "MAXINCOME RESOURCES SDN BHD",
+      "ocr": "Maxinicome Resources Sdn Bhd",
+      "start": 35,
+      "end": 63
+     }
+    },
+    "sroie-X51006555819": {
+     "company": {
+      "gold": "GARDENIA BAKERIES (KL) SDN BHD",
+      "ocr": "GARDENIA BAKE RIES (KE )SDN BILD",
+      "start": 0,
+      "end": 32
+     }
+    },
+    "sroie-X51006556658": {
+     "company": {
+      "gold": "GARDENIA BAKERIES (KL) SDN BHD",
+      "ocr": "G! ARDE INIA BAKERIES (KL) SDN BHD",
+      "start": 9,
+      "end": 43
+     }
+    },
+    "sroie-X51006556728": {
+     "company": {
+      "gold": "GARDENIA BAKERIES (KL) SDN BHD",
+      "ocr": "GARDENIA BAKERIES@KL)8DN BHD",
+      "start": 0,
+      "end": 28
+     },
+     "address": {
+      "gold": "LOT 3, JALAN PELABUR 23/1, 40300 SHAH ALAM, SELANGOR.",
+      "ocr": "Lot 3, Jalan Pelabur 23/1,\n40300 Shahi Alain, Selangor.",
+      "start": 40,
+      "end": 95
+     }
+    },
+    "sroie-X51006556809": {
+     "company": {
+      "gold": "GARDENIA BAKERIES (KL) SDN BHD",
+      "ocr": "GARDENIA BAKERIES S (KL) } SDN BHD",
+      "start": 0,
+      "end": 34
+     }
+    },
+    "sroie-X51006556821": {
+     "company": {
+      "gold": "GARDENIA BAKERIES (KL) SDN BHD",
+      "ocr": "GARDENIA BAKEREES (KL) SDN BED",
+      "start": 0,
+      "end": 30
+     },
+     "address": {
+      "gold": "LOT 3, JALAN PELABUR 23/1, 40300 SHAH ALAM, SELANGOR.",
+      "ocr": "Lot 3, Jalan Pelabur 23/1,\n40300 Shah Alam, Selangoy.",
+      "start": 42,
+      "end": 95
+     }
+    },
+    "sroie-X51006556826": {
+     "company": {
+      "gold": "GARDENIA BAKERIES (KL) SDN BHD",
+      "ocr": "GARDENIA BAKE RIES (KI. ) SDN BED",
+      "start": 0,
+      "end": 33
+     }
+    },
+    "sroie-X51006556827": {
+     "company": {
+      "gold": "GARDENIA BAKERIES (KL) SDN BHD",
+      "ocr": "GARDENIA BAKERIES (KL) SDN BILD",
+      "start": 0,
+      "end": 31
+     }
+    },
+    "sroie-X51006556829": {
+     "company": {
+      "gold": "GARDENIA BAKERIES (KL) SDN BHD",
+      "ocr": "GARDENIA BAKERLES (KE) SDN BELD",
+      "start": 9,
+      "end": 40
+     }
+    },
+    "sroie-X51006556851": {
+     "address": {
+      "gold": "LOT 3, JALAN PELABUR 23/1, 40300 SHAH ALAM, SELANGOR.",
+      "ocr": "Lot3, Jalan Pelabur 23/1,\n40300 Shain Alam, Selangor.",
+      "start": 49,
+      "end": 102
+     }
+    },
+    "sroie-X51006556865": {
+     "company": {
+      "gold": "GARDENIA BAKERIES (KL) SDN BHD",
+      "ocr": "GARDENIA BAKERLES (KL) SDN BED",
+      "start": 10,
+      "end": 40
+     }
+    },
+    "sroie-X51006557173": {
+     "company": {
+      "gold": "GARDENIA BAKERIES (KL) SDN BHD",
+      "ocr": "GARDEN A BAKERIES (KL) SDN BHD",
+      "start": 4,
+      "end": 34
+     },
+     "address": {
+      "gold": "LOT 3, JALAN PELABUR 23/1, 40300 SHAH ALAM, SELANGOR.",
+      "ocr": "Lot 3, Jalan Pelabur 23/1,\n40300 Shati ‘lam, Selangor.",
+      "start": 46,
+      "end": 100
+     }
+    },
+    "sroie-X51006557194": {
+     "company": {
+      "gold": "GARDENIA BAKERIES (KL) SDN BHD",
+      "ocr": "GARDENIA BAKERIES (KL) SDS BHD",
+      "start": 0,
+      "end": 30
+     }
+    },
+    "sroie-X51006557196": {
+     "company": {
+      "gold": "GARDENIA BAKERIES (KL) SDN BHD",
+      "ocr": "GARDENIA BAKERIES (KL) SDN BED",
+      "start": 0,
+      "end": 30
+     }
+    },
+    "sroie-X51006557208": {
+     "company": {
+      "gold": "GARDENIA BAKERIES (KL) SDN BHD",
+      "ocr": "GARDE. NIA BAKERIES (KL ) SDN BELD",
+      "start": 28,
+      "end": 62
+     }
+    },
+    "sroie-X51006557209": {
+     "company": {
+      "gold": "GARDENIA BAKERIES (KL) SDN BHD",
+      "ocr": "GARDENIA BAKERIES S (KI. ) SDN BUD",
+      "start": 0,
+      "end": 34
+     }
+    },
+    "sroie-X51006619338": {
+     "company": {
+      "gold": "99 SPEED MART S/B",
+      "ocr": "99 SPEED HART S/8",
+      "start": 6,
+      "end": 23
+     },
+     "address": {
+      "gold": "LOT P.T. 33198, BATU 4 JALAN KAPAR, MUKIM KAPAR 42100 KLANG, SELANGOR 1320-TMN BATU",
+      "ocr": "LOT P.T. 33198, BATU 4\nJALAN KAPAR, HUKIN KAPAR\n42100 KLANG, SELANGOR\n1320-THR BATU",
+      "start": 35,
+      "end": 118
+     }
+    },
+    "sroie-X51006619757": {
+     "company": {
+      "gold": "99 SPEED MART S/B",
+      "ocr": "99 SPEED HART S/B",
+      "start": 0,
+      "end": 17
+     },
+     "address": {
+      "gold": "LOT P.T. 33198, BATU 4 JALAN KAPAR, MUKIM KAPAR 42100 KLANG, SELANGOR 1605-TMN SRI BINTANG",
+      "ocr": "LOT P.T. 33198, BATU 4\nJALAN KAPAR, MUKIN KAPAR\n\n42100 KLANG, SELANGOR\n1605-THN SRI BINTANG",
+      "start": 29,
+      "end": 120
+     }
+    },
+    "sroie-X51006619766": {
+     "company": {
+      "gold": "MR. D.I.Y. (M) SDN BHD",
+      "ocr": "WR. D.I.Y. (M) SDN BHD",
+      "start": 0,
+      "end": 22
+     }
+    },
+    "sroie-X51006619790": {
+     "address": {
+      "gold": "NO.2, JALAN UDANG SIAR 2, TAMAN SRI SEGAMBUT, 52000 KUALA LUMPUR.",
+      "ocr": "NO.2, JALAN UDANG SIAR 2,\nTAMAN SRI SEGAMBUT,\n\nS2000 KUALA LUMPUR.",
+      "start": 40,
+      "end": 106
+     }
+    },
+    "sroie-X51006619863": {
+     "address": {
+      "gold": "LOT P.T. 33198, BATU 4 JALAN KAPAR, MUKIM KAPAR 42100 KLANG, SELANGOR 1181-TMN SRI SINAR",
+      "ocr": "LOT P.T. 33198, BATU 4\nJALAN KAPAR, MUKIN KAPAR\n42100 KLANG, SELANGOR\n1181-THN SRI SINAR",
+      "start": 29,
+      "end": 117
+     }
+    },
+    "sroie-X51006647933": {
+     "company": {
+      "gold": "RESTORAN HOETIM",
+      "ocr": "RESTORAN HOETIN",
+      "start": 12,
+      "end": 27
+     },
+     "address": {
+      "gold": "1-G,JALAN OS 1/3,ONE SELAYANG OFF JALAN RAWANG 68100 B.CAVES",
+      "ocr": "1-G,JALAN 0S 1/3,0NE SELAYANG\n\nOFF JALAN RAWANG 68100 B,CAVES",
+      "start": 43,
+      "end": 104
+     }
+    },
+    "sroie-X51006733495": {
+     "company": {
+      "gold": "99 SPEED MART S/B",
+      "ocr": "99 SPEED MART 5/B",
+      "start": 0,
+      "end": 17
+     },
+     "address": {
+      "gold": "LOT P.T. 33198, BATU 4 JALAN KAPAR, MUKIM KAPAR 42100 KLANG, SELANGOR 1558-TMN PUSAT KEPONG",
+      "ocr": "LOT P.T. 33198, BATU 4\nJALAN KAPAR, MUKIM KAPAR\n\n42100 KLANG, SELANGOR\n1558-THN PUSAT KEPONG",
+      "start": 29,
+      "end": 121
+     }
+    },
+    "sroie-X51006828199": {
+     "address": {
+      "gold": "LOT 2-25, SUNWAY VELOCITY MALL LINGKARAN SV, SUNWAY VELOCITY, 55100 KUALA LUMPUR",
+      "ocr": "Lot 2-25, Sunway Velocity Mal\nLingkaran SY, Sunway Velocity\n55100 Kuala Lumpur",
+      "start": 34,
+      "end": 112
+     }
+    },
+    "sroie-X51006856982": {
+     "address": {
+      "gold": "LOT B-005-006, BASEMENT LEVEL 1 THE STARLING MALL JALAN SS21/60, DAMANSARA UTAMA.",
+      "ocr": "Lot B+O05-006; Basewent Level 1\nThe Starling Mall\n\nJalan §521/60s Damansara Utana.",
+      "start": 35,
+      "end": 117
+     }
+    },
+    "sroie-X51006857137": {
+     "company": {
+      "gold": "99 SPEED MART S/B",
+      "ocr": "99 SPEED MART 5/8",
+      "start": 0,
+      "end": 17
+     }
+    },
+    "sroie-X51006912998": {
+     "company": {
+      "gold": "BHPETROL PERMAS JAYA 2",
+      "ocr": "BHRetrol Permas Jaya 2",
+      "start": 0,
+      "end": 22
+     }
+    },
+    "sroie-X51007103649": {
+     "company": {
+      "gold": "MR. D.I.Y. (M) SDN BHD",
+      "ocr": "MR. O.1.Y. (M) SDN BHD",
+      "start": 10,
+      "end": 32
+     },
+     "address": {
+      "gold": "LOT 1851-A & 1851-B, JALAN KPB 6, KAWASAN PERINDUSTRIAN BALAKONG, 43300 SERI KEMBANGAN, SELANGOR",
+      "ocr": "LOT 1851-A & 1851-B, JALAN KPB 6, =\nKAWASAN PERINDUSTRIAN BALAKONG,\n\n43300 SER] KEMBANGAN, SELANGOR",
+      "start": 54,
+      "end": 153
+     }
+    },
+    "sroie-X51007231346": {
+     "address": {
+      "gold": "JLN PERMAS 9/5, BDR PERMAS JAYA 81750, JOHOR BAHRU",
+      "ocr": "Jin Permas 9/5, Bdr Permas Jaya\n81750, Johor Bahru",
+      "start": 79,
+      "end": 129
+     }
+    },
+    "sroie-X51007231364": {
+     "company": {
+      "gold": "GERBANG ALAF RESTAURANTS SDN BHD",
+      "ocr": "Cerbang Alaf Restaurants Sdn Bhd",
+      "start": 0,
+      "end": 32
+     }
+    },
+    "sroie-X51007339105": {
+     "company": {
+      "gold": "SANYU STATIONERY SHOP",
+      "ocr": "SANYO STATIONERY SHOP",
+      "start": 0,
+      "end": 21
+     }
+    },
+    "sroie-X51007339109": {
+     "company": {
+      "gold": "SANYU STATIONERY SHOP",
+      "ocr": "SANYO STATIONERY SHOP",
+      "start": 0,
+      "end": 21
+     }
+    },
+    "sroie-X51007339119": {
+     "company": {
+      "gold": "SANYU STATIONERY SHOP",
+      "ocr": "SANYO STATIONERY SHOP",
+      "start": 0,
+      "end": 21
+     }
+    },
+    "sroie-X51007339121": {
+     "company": {
+      "gold": "SANYU STATIONERY SHOP",
+      "ocr": "SANYO STATIONERY SHOP",
+      "start": 0,
+      "end": 21
+     }
+    },
+    "sroie-X51007339127": {
+     "company": {
+      "gold": "SANYU STATIONERY SHOP",
+      "ocr": "SANYO STATIONERY SHOP",
+      "start": 0,
+      "end": 21
+     }
+    },
+    "sroie-X51007339134": {
+     "address": {
+      "gold": "NO. 31G&33G, JALAN SETIA INDAH X ,U13/X 40170 SETIA ALAM",
+      "ocr": "NO, 31G&33G, JALAN SETIA INDAH X ,U13\n\nfx\n\n40170 SETIA ALAM",
+      "start": 23,
+      "end": 82
+     }
+    },
+    "sroie-X51007339163": {
+     "company": {
+      "gold": "SANYU STATIONERY SHOP",
+      "ocr": "SANYO STATIONERY SHOP",
+      "start": 0,
+      "end": 21
+     }
+    },
+    "sroie-X51007391390": {
+     "address": {
+      "gold": "NO.3343, GROUND FLOOR, JALAN 18/32, TAMAN SRI SERDANG, 43300 SERI KEMBANGAN,",
+      "ocr": "No.3343, Ground Floor, Jalan 18/32,\nTaman Sri Serdana,\n43300 Seri Kembanaan,",
+      "start": 48,
+      "end": 124
+     }
+    },
+    "sroie-X51007579714": {
+     "address": {
+      "gold": "NO.2-1,JALAN KAMARUDDIN ISA 31400 IPOH,PERAK DARUL RIDZUAN",
+      "ocr": "NO.2-1, JALAN KAMARUDDIN ISA\n31400 TPOH,PERAK DARUL RIDZUAN",
+      "start": 74,
+      "end": 133
+     }
+    },
+    "sroie-X51007579719": {
+     "address": {
+      "gold": "LOT S10NB & S12NB, RESTORAN JEJANTAS SG. BULOH, ARAH UTARA, PLUS BERHAD.",
+      "ocr": "LOT S1ONB & S12NB,\nRESTORAN JEJANTAS SG. BULOH,\nARAH UTARA, PLUS BERHAD.",
+      "start": 16,
+      "end": 88
+     }
+    },
+    "sroie-X51007846282": {
+     "company": {
+      "gold": "MOONLIGHT CAKE HOUSE SDN BHD",
+      "ocr": "MOUNLIGHT CAKE HUUSE SON BHD",
+      "start": 0,
+      "end": 28
+     }
+    },
+    "sroie-X51007846355": {
+     "total": {
+      "gold": "8.95",
+      "ocr": "Incl GST B.95",
+      "start": 371,
+      "end": 384,
+      "fixed": "Incl GST 8.95"
+     }
+    },
+    "sroie-X51007846379": {
+     "company": {
+      "gold": "AEON CO. (M) BHD",
+      "ocr": "AEGON CO. (M) BHD",
+      "start": 10,
+      "end": 27
+     }
+    },
+    "sroie-X51007846400": {
+     "address": {
+      "gold": "NO 4, JALAN PERMAS 10/5. BANDAR BARU PERMAS JAYA, 81750 JOHOR BAHRU, JOHOR.",
+      "ocr": "No 4, Jalan Permas 10/5.\nBardar Baru Permas Jaya,\n\na - 81750 Johor Bahru, Johor.",
+      "start": 64,
+      "end": 144
+     }
+    },
+    "sroie-X51008042786": {
+     "company": {
+      "gold": "GERBANG ALAF RESTAURANTS SDN BHD",
+      "ocr": "Gerbang Alaf Restaurants Sda Bhd",
+      "start": 5,
+      "end": 37
+     }
+    },
+    "sroie-X51008042787": {
+     "address": {
+      "gold": "KM 4, JLN AMPANG, HULU LANGAT, 68000 AMAPNG, SELANGOR.",
+      "ocr": "KM 4, Jin Ampang, Hulu Langat,\n68000 Amapng, Selangor.",
+      "start": 82,
+      "end": 136
+     }
+    }
+   }
+  },
+  "cord": {
+   "counts": {
+    "clean": 397,
+    "garbled": 16,
+    "absent": 667,
+    "skip": 0
+   },
+   "flags": {
+    "cord-dev-008": {
+     "menu_nm": {
+      "gold": "TALAM UNGU",
+      "ocr": "TALAW UNGU",
+      "start": 9,
+      "end": 19
+     }
+    },
+    "cord-dev-074": {
+     "menu_nm": {
+      "gold": "THAI ICED TEA",
+      "ocr": "THAT ICED TEA",
+      "start": 0,
+      "end": 13
+     }
+    },
+    "cord-dev-079": {
+     "menu_nm": {
+      "gold": "Crab Stick",
+      "ocr": "Grab Stick",
+      "start": 2,
+      "end": 12
+     }
+    },
+    "cord-dev-084": {
+     "menu_nm": {
+      "gold": "HAZELNUT CHOCO MT (R)",
+      "ocr": "HAZELNUT CHOCO HT ( R",
+      "start": 71,
+      "end": 92
+     }
+    },
+    "cord-dev-086": {
+     "menu_nm": {
+      "gold": "LEMONADE22OZ",
+      "ocr": "LEMONADE 220Z",
+      "start": 0,
+      "end": 13
+     }
+    },
+    "cord-dev-094": {
+     "menu_nm": {
+      "gold": "Emily's Shrimp Scampi Fettucine",
+      "ocr": "Emily $ shrimp scampi\n\nFettucine",
+      "start": 30,
+      "end": 62
+     }
+    },
+    "cord-test-017": {
+     "menu_nm": {
+      "gold": "Mozarella Hot Dog",
+      "ocr": "Mozarelia Hot\n\nDog",
+      "start": 15,
+      "end": 33
+     }
+    },
+    "cord-test-022": {
+     "menu_nm": {
+      "gold": "[MD] SOFT STEAMED CHOCOCA",
+      "ocr": "[MD] SOFT STEAMED CHOCCCA",
+      "start": 37,
+      "end": 62
+     }
+    },
+    "cord-test-023": {
+     "menu_nm": {
+      "gold": "TWIST DONUT",
+      "ocr": "THIST DONUT",
+      "start": 2,
+      "end": 13
+     }
+    },
+    "cord-test-030": {
+     "cashprice": {
+      "gold": 50000,
+      "ocr": "Cash 50, O00",
+      "start": 0,
+      "end": 12,
+      "fixed": "Cash 50, 000"
+     }
+    },
+    "cord-test-036": {
+     "menu_nm": {
+      "gold": "XXL Crispy Chicken",
+      "ocr": "XXMLCrispy Chicken",
+      "start": 2,
+      "end": 20
+     }
+    },
+    "cord-test-050": {
+     "menu_nm": {
+      "gold": "Superice Cauburry",
+      "ocr": "SpePrice Cauburry",
+      "start": 11,
+      "end": 28
+     }
+    },
+    "cord-test-054": {
+     "menu_nm": {
+      "gold": "KACANG MERAH",
+      "ocr": "KACANG HERAH",
+      "start": 29,
+      "end": 41
+     }
+    },
+    "cord-test-070": {
+     "menu_nm": {
+      "gold": "BIHUN GORENG JJ",
+      "ocr": "RIHUN GORENG JJ",
+      "start": 175,
+      "end": 190
+     }
+    },
+    "cord-test-072": {
+     "menu_nm": {
+      "gold": "Choco Devil",
+      "ocr": "Ghoco Devil",
+      "start": 61,
+      "end": 72
+     }
+    },
+    "cord-test-097": {
+     "menu_nm": {
+      "gold": "SATE ATI GO",
+      "ocr": "SATECATIEGO",
+      "start": 53,
+      "end": 64
+     }
+    }
+   }
+  }
+ }
+}

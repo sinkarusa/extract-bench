@@ -21,15 +21,19 @@ Field mapping (the same definition text as `instructions` for Clairic / `definit
 - GLiNER2.5-base: one entity label per field with the definition as its description; scalar field = the most confident
   span, list field = every span; documents longer than the encoder window are split into overlapping chunks.
 - d1-2B: one named System One read question per field (`system_one`, one forward pass, no generated tokens) with the
-  definition as its `instructions`; text -> text, number/money -> number (money with its `unit`), date -> date;
-  time/datetime/duration -> text (the scorer parses the written form). d1 has no list read, so a list field is one
-  read of its item type and scores as a one-element list. A read is null when its `found` is under 0.5.
+  definition as its `instructions`; text -> text, number/money -> number with Clairic's unit hint (money: the field's
+  unit, else "currency"), date -> date; time/datetime/duration -> text (the scorer parses the written form). d1 has no
+  list read, so a list field is one read of its item type and scores as a one-element list. A read is null when its
+  calibrated `found` is under D1_FOUND.
+- d1-2B + image (`d1_2b_img`): `clairic_vision_ocr`'s input. The same questions and text plus the item's original page
+  files (<= 4, Clairic's size checks) as `media`, on the items that have images; no text -> the images alone.
 """
 from __future__ import annotations
 
 import argparse, html, json, re, time
 from pathlib import Path
 
+from . import clients as C
 from .common import BENCH_VERSION, RUNS, dataset_dir, is_holdout, load_items, load_split, write_json
 from .run import item_text
 
@@ -40,6 +44,8 @@ MODELS = {
     "schematron3b": {"hf": "inference-net/Schematron-3B", "kind": "schematron"},
     "gliner25": {"hf": "fastino/gliner2.5-base-v1", "kind": "gliner"},
     "d1_2b": {"hf": "LiquidAI/d1-2B", "kind": "d1"},
+    # clairic_vision_ocr's input: the page image(s) plus the same text (image sets only; no text -> image alone)
+    "d1_2b_img": {"hf": "LiquidAI/d1-2B", "kind": "d1", "input": "image+text"},
 }
 NU_TYPES = {"text": "verbatim-string", "money": "number", "date": "date", "time": "time", "datetime": "date-time",
             "duration": "duration"}
@@ -76,9 +82,13 @@ D1_FOUND = 0.5  # a read answers when its calibrated `found` reaches this; below
 
 
 def d1_question(f):
+    """Mirrors `clients.clairic_field` where a d1 read can express it: money -> number with the field's unit, else
+    "currency"; number -> its unit if any; a list reads one value of its item type (Clairic's list spec has no unit)."""
     t = f.get("items", "text") if f["type"] == "list" else f["type"]
     q = {"type": D1_TYPES.get(t, "text"), "instructions": definition(f)}
-    if t == "money" and f.get("unit"):
+    if f["type"] == "money":
+        q["unit"] = f.get("unit") or "currency"
+    elif f["type"] == "number" and f.get("unit"):
         q["unit"] = f["unit"]
     return q
 
@@ -105,8 +115,8 @@ def build(item, text, model):
     if model == "gliner25":
         return {"text": text, "labels": {f["name"]: definition(f) for f in fields},
                 "list_fields": [f["name"] for f in fields if f["type"] == "list"]}
-    if model == "d1_2b":
-        return {"state": text, "questions": {f["name"]: d1_question(f) for f in fields}}
+    if model in ("d1_2b", "d1_2b_img"):
+        return {"state": text or None, "questions": {f["name"]: d1_question(f) for f in fields}}
     raise KeyError(model)
 
 
@@ -123,10 +133,20 @@ def export(a):
                 continue
             text, src = item_text(it, dsd)
             for m in a.models:
+                with_img = "image" in MODELS[m].get("input", "text")
+                if with_img and not it.get("images"):
+                    continue                               # n/a, as `run read` skips an image arm without images
                 rec = {"id": it["id"], "dataset": ds, "arm": m, "hf": MODELS[m]["hf"], "text_source": src,
-                       "empty": not (text or "").strip()}
+                       "empty": not (text or "").strip() and not with_img}
                 if not rec["empty"]:
                     rec["request"] = build(it, text, m)
+                if with_img:
+                    try:
+                        C.load_images(it, dsd)             # Clairic's checks: <= 4 images, <= 4 MiB each, 8 MiB total
+                        rec["request"]["images"] = [str(dsd / p) for p in it["images"]]
+                        rec["n_images"] = len(it["images"])
+                    except C.ImageRejected as e:
+                        rec["error"] = f"image_rejected: {e}"
                 fhs[m].write(json.dumps(rec, ensure_ascii=False) + "\n")
             n += 1
     for fh in fhs.values():
@@ -176,7 +196,7 @@ def parse(item, model, result):
             else:
                 out[f["name"]] = {"value": ss[0]["text"] if ss else None, "conf": ss[0].get("confidence") if ss else None}
         return out
-    if model == "d1_2b":
+    if model in ("d1_2b", "d1_2b_img"):
         answers = result.get("answers")
         if not isinstance(answers, dict):
             return None
@@ -208,11 +228,13 @@ def do_import(a):
         for line in open(rf):
             r = json.loads(line)
             it = items[r["dataset"]][r["id"]]
-            spec = {"system": "open", "input": "text", "model": MODELS[m]["hf"], "name": m, "variant": None, "view": None}
+            spec = {"system": "open", "input": MODELS[m].get("input", "text"), "model": MODELS[m]["hf"], "name": m,
+                    "variant": None, "view": None}
             base = {"id": it["id"], "dataset": r["dataset"], "arm": m, "spec": spec, "text_source": r.get("text_source"),
-                    "n_images": 0, "holdout": is_holdout(it), "ts": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "mock": False,
-                    "cost_usd": 0.0, "wall_ms": r.get("wall_ms"), "n_calls": r.get("n_calls", 1),
-                    "raw_responses": [{"call": 0, "response": r.get({"gliner25": "spans", "d1_2b": "answers"}.get(m, "text"))}],
+                    "n_images": r.get("n_images", 0), "holdout": is_holdout(it), "ts": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+                    "mock": False, "cost_usd": 0.0, "wall_ms": r.get("wall_ms"), "n_calls": r.get("n_calls", 1),
+                    "raw_responses": [{"call": 0, "response": r.get({"gliner25": "spans", "d1_2b": "answers",
+                                                                     "d1_2b_img": "answers"}.get(m, "text"))}],
                     "pod": r.get("pod")}
             if r.get("empty"):
                 preds = {f["name"]: {"value": None, "conf": None, "input_empty": True} for f in it["fields"]}

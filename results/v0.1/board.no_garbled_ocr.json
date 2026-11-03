@@ -1,0 +1,1603 @@
+{
+ "version": "v0.1",
+ "split": "eval",
+ "systems": {
+  "clairic": {
+   "system": "clairic",
+   "benchmark_version": "v0.1",
+   "display_name": "Clairic",
+   "org": "Cloudflare",
+   "model": "@cf/cloudflare/clairic (Workers AI)",
+   "arm": "clairic_text",
+   "input": "text",
+   "run_date": "2026-10-23",
+   "open_weights": false,
+   "maintainer_product": false,
+   "notes": "Default null_threshold; one 45k-token window.",
+   "tier": "maintainer-run",
+   "n_items": 1844
+  },
+  "clairic_img": {
+   "system": "clairic_img",
+   "benchmark_version": "v0.1",
+   "display_name": "Clairic + image",
+   "org": "Cloudflare",
+   "model": "@cf/cloudflare/clairic (Workers AI)",
+   "arm": "clairic_vision_ocr",
+   "input": "image+text",
+   "run_date": "2026-10-23",
+   "open_weights": false,
+   "maintainer_product": false,
+   "notes": "Page image(s) plus the same text; image sets only.",
+   "tier": "maintainer-run",
+   "n_items": 1457
+  },
+  "d1_2b": {
+   "system": "d1_2b",
+   "benchmark_version": "v0.1",
+   "display_name": "d1-2B",
+   "org": "Liquid AI",
+   "model": "LiquidAI/d1-2B",
+   "arm": "d1_2b",
+   "input": "text",
+   "run_date": "2026-11-02",
+   "open_weights": true,
+   "maintainer_product": false,
+   "notes": "transformers 5.22.1 remote code @ 10e7671d, bf16, one RTX 3090; one system_one call per document (one read question per field, definition as instructions, Clairic's unit hints: money -> number with the field's unit else 'currency', number -> its unit; no generation). Every read keeps its span; a field answers when its calibrated found >= 0.5 (the model's own cut; a fit-half sweep picked 0.40, +0.3 on eval, not used). No list read: list fields get one value. Not tuned.",
+   "tier": "self-reported",
+   "n_items": 1844
+  },
+  "d1_2b_img": {
+   "system": "d1_2b_img",
+   "benchmark_version": "v0.1",
+   "display_name": "d1-2B + image",
+   "org": "Liquid AI",
+   "model": "LiquidAI/d1-2B",
+   "arm": "d1_2b_img",
+   "input": "image+text",
+   "run_date": "2026-11-02",
+   "open_weights": true,
+   "maintainer_product": false,
+   "notes": "clairic_vision_ocr's input: the item's original page files (<= 4, Clairic's size checks) as system_one media plus the same text and questions as d1_2b; image sets only. d1 caps each picture at its trained 1,638,400 px (checkpoint config); a run with the cap lifted to 16,777,216 px scored 62.9 vs 63.2, so the default is published. Pages rebuilt with each dataset's build.py: FATURA, OmniAI, DocVQA, SROIE, CORD byte-identical to the item metadata; VRDU 664/722 and RealDoc 169/180 byte-identical (others: same pixels, different font/JPEG library bytes). Same runtime and found >= 0.5 cut as d1_2b. Not tuned.",
+   "tier": "self-reported",
+   "n_items": 1457
+  },
+  "gliner25": {
+   "system": "gliner25",
+   "benchmark_version": "v0.1",
+   "display_name": "GLiNER2.5",
+   "org": "Fastino",
+   "model": "fastino/gliner2.5-base-v1",
+   "arm": "gliner25",
+   "input": "text",
+   "run_date": "2026-10-29",
+   "open_weights": true,
+   "maintainer_product": false,
+   "notes": "gliner2 2.1.0; one entity label per field; 1,800-char chunks with 300-char overlap.",
+   "tier": "maintainer-run",
+   "n_items": 1844
+  },
+  "nuextract3": {
+   "system": "nuextract3",
+   "benchmark_version": "v0.1",
+   "display_name": "NuExtract3",
+   "org": "NuMind",
+   "model": "numind/NuExtract3",
+   "arm": "nuextract3",
+   "input": "text",
+   "run_date": "2026-10-29",
+   "open_weights": true,
+   "maintainer_product": false,
+   "notes": "vLLM 0.32.0, bf16, temperature 0, one NVIDIA A40; JSON template + field definitions as instructions.",
+   "tier": "maintainer-run",
+   "n_items": 1844
+  },
+  "sage2": {
+   "system": "sage2",
+   "benchmark_version": "v0.1",
+   "display_name": "Sage 2",
+   "org": "Levanto",
+   "model": "Sage 2 rc9 (preview), fast tier",
+   "arm": "sage_fast",
+   "input": "text",
+   "run_date": "2026-10-28",
+   "open_weights": false,
+   "maintainer_product": true,
+   "notes": "Run by Levanto. Abstention thresholds fitted on the fit half of splits/v0.1.json.",
+   "tier": "maintainer-run",
+   "n_items": 1844
+  },
+  "schematron3b": {
+   "system": "schematron3b",
+   "benchmark_version": "v0.1",
+   "display_name": "Schematron-3B",
+   "org": "Inference.net",
+   "model": "inference-net/Schematron-3B",
+   "arm": "schematron3b",
+   "input": "text",
+   "run_date": "2026-10-29",
+   "open_weights": true,
+   "maintainer_product": false,
+   "notes": "vLLM 0.32.0, bf16, temperature 0, schema-constrained; document text wrapped as minimal HTML.",
+   "tier": "maintainer-run",
+   "n_items": 1844
+  }
+ },
+ "boards": {
+  "headline": {
+   "systems": [
+    "sage2",
+    "clairic"
+   ],
+   "reference": "sage2",
+   "datasets": {
+    "fatura": {
+     "items": 62,
+     "fields": 606,
+     "acc": {
+      "sage2": 91.58415841584159,
+      "clairic": 88.44884488448845
+     },
+     "absent_fields": 166,
+     "absent_correct": {
+      "sage2": 96.98795180722891,
+      "clairic": 84.93975903614458
+     },
+     "diff_vs_ref": {
+      "clairic": {
+       "diff": -3.135313531353134,
+       "ci95": [
+        -5.132450331125838,
+        -1.3136288998357912
+       ],
+       "sig": true
+      }
+     }
+    },
+    "omniai": {
+     "items": 95,
+     "fields": 1524,
+     "acc": {
+      "sage2": 74.13931088349108,
+      "clairic": 70.85665481573415
+     },
+     "absent_fields": 51,
+     "absent_correct": {
+      "sage2": 84.31372549019608,
+      "clairic": 43.13725490196079
+     },
+     "diff_vs_ref": {
+      "clairic": {
+       "diff": -3.282656067756932,
+       "ci95": [
+        -6.120651684073508,
+        -0.37315235986162065
+       ],
+       "sig": true
+      }
+     }
+    },
+    "docvqa": {
+     "items": 139,
+     "fields": 139,
+     "acc": {
+      "sage2": 73.60059419551048,
+      "clairic": 75.41212473144606
+     },
+     "absent_fields": 0,
+     "absent_correct": {
+      "sage2": null,
+      "clairic": null
+     },
+     "diff_vs_ref": {
+      "clairic": {
+       "diff": 1.8115305359355744,
+       "ci95": [
+        -4.488831603502703,
+        8.063037744787081
+       ],
+       "sig": false
+      }
+     }
+    },
+    "vrdu": {
+     "items": 131,
+     "fields": 971,
+     "acc": {
+      "sage2": 67.0592109092143,
+      "clairic": 59.99224802713054
+     },
+     "absent_fields": 231,
+     "absent_correct": {
+      "sage2": 52.38095238095238,
+      "clairic": 19.913419913419915
+     },
+     "diff_vs_ref": {
+      "clairic": {
+       "diff": -7.066962882083757,
+       "ci95": [
+        -10.286043036027166,
+        -3.698274151732207
+       ],
+       "sig": true
+      }
+     }
+    },
+    "realdoc": {
+     "items": 70,
+     "fields": 216,
+     "acc": {
+      "sage2": 41.666666666666664,
+      "clairic": 40.27777777777778
+     },
+     "absent_fields": 18,
+     "absent_correct": {
+      "sage2": 50.0,
+      "clairic": 16.666666666666668
+     },
+     "diff_vs_ref": {
+      "clairic": {
+       "diff": -1.3888888888888857,
+       "ci95": [
+        -8.583690987124463,
+        5.4054054054054035
+       ],
+       "sig": false
+      }
+     }
+    },
+    "kleister_nda": {
+     "items": 31,
+     "fields": 93,
+     "acc": {
+      "sage2": 94.6236559139785,
+      "clairic": 94.6236559139785
+     },
+     "absent_fields": 23,
+     "absent_correct": {
+      "sage2": 82.6086956521739,
+      "clairic": 91.30434782608695
+     },
+     "diff_vs_ref": {
+      "clairic": {
+       "diff": 0.0,
+       "ci95": [
+        -5.376344086021504,
+        5.376344086021504
+       ],
+       "sig": false
+      }
+     }
+    },
+    "kleister_charity": {
+     "items": 44,
+     "fields": 344,
+     "acc": {
+      "sage2": 84.30232558139535,
+      "clairic": 86.9186046511628
+     },
+     "absent_fields": 14,
+     "absent_correct": {
+      "sage2": 50.0,
+      "clairic": 64.28571428571429
+     },
+     "diff_vs_ref": {
+      "clairic": {
+       "diff": 2.616279069767444,
+       "ci95": [
+        -0.2906976744186096,
+        5.780346820809243
+       ],
+       "sig": false
+      }
+     }
+    },
+    "emails": {
+     "items": 45,
+     "fields": 45,
+     "acc": {
+      "sage2": 80.0,
+      "clairic": 66.66666666666667
+     },
+     "absent_fields": 0,
+     "absent_correct": {
+      "sage2": null,
+      "clairic": null
+     },
+     "diff_vs_ref": {
+      "clairic": {
+       "diff": -13.333333333333329,
+       "ci95": [
+        -33.333333333333336,
+        6.666666666666671
+       ],
+       "sig": false
+      }
+     }
+    },
+    "tatqa": {
+     "items": 24,
+     "fields": 24,
+     "acc": {
+      "sage2": 83.48957507531314,
+      "clairic": 79.41358557583126
+     },
+     "absent_fields": 0,
+     "absent_correct": {
+      "sage2": null,
+      "clairic": null
+     },
+     "diff_vs_ref": {
+      "clairic": {
+       "diff": -4.075989499481878,
+       "ci95": [
+        -19.388108016014996,
+        11.236942292197256
+       ],
+       "sig": false
+      }
+     }
+    },
+    "squad2": {
+     "items": 57,
+     "fields": 57,
+     "acc": {
+      "sage2": 92.0705507083216,
+      "clairic": 94.73684210526316
+     },
+     "absent_fields": 27,
+     "absent_correct": {
+      "sage2": 88.88888888888889,
+      "clairic": 92.5925925925926
+     },
+     "diff_vs_ref": {
+      "clairic": {
+       "diff": 2.66629139694156,
+       "ci95": [
+        -3.0753353973168203,
+        9.22975888920162
+       ],
+       "sig": false
+      }
+     }
+    },
+    "sroie": {
+     "items": 143,
+     "fields": 516,
+     "acc": {
+      "sage2": 65.69767441860465,
+      "clairic": 67.05426356589147
+     },
+     "absent_fields": 0,
+     "absent_correct": {
+      "sage2": null,
+      "clairic": null
+     },
+     "diff_vs_ref": {
+      "clairic": {
+       "diff": 1.356589147286826,
+       "ci95": [
+        -1.1627906976744242,
+        3.8387715930902147
+       ],
+       "sig": false
+      }
+     }
+    },
+    "cord": {
+     "items": 79,
+     "fields": 940,
+     "acc": {
+      "sage2": 53.154857445031006,
+      "clairic": 51.12269790935558
+     },
+     "absent_fields": 404,
+     "absent_correct": {
+      "sage2": 98.26732673267327,
+      "clairic": 86.63366336633663
+     },
+     "diff_vs_ref": {
+      "clairic": {
+       "diff": -2.032159535675426,
+       "ci95": [
+        -4.46133311624245,
+        0.6506276851587032
+       ],
+       "sig": false
+      }
+     }
+    }
+   },
+   "mean_sets": [
+    "fatura",
+    "omniai",
+    "docvqa",
+    "vrdu",
+    "realdoc",
+    "kleister_nda",
+    "kleister_charity",
+    "emails",
+    "tatqa",
+    "squad2"
+   ],
+   "mean": {
+    "sage2": 78.25360483497327,
+    "clairic": 75.73470051494792
+   },
+   "mean_all_sets": {
+    "sage2": 75.11571501778069,
+    "clairic": 72.96033055206051
+   },
+   "absent_correct_mean": {
+    "sage2": 72.16860203134858,
+    "clairic": 58.97710788894083
+   },
+   "absent_sets": [
+    "fatura",
+    "omniai",
+    "vrdu",
+    "realdoc",
+    "kleister_nda",
+    "kleister_charity",
+    "squad2"
+   ],
+   "mean_diff_vs_ref": {
+    "clairic": {
+     "diff": -2.5189043200253565,
+     "ci95": [
+      -5.382709968172023,
+      0.38072442132124706
+     ],
+     "sig": false
+    }
+   }
+  },
+  "text": {
+   "systems": [
+    "sage2",
+    "clairic",
+    "nuextract3",
+    "schematron3b",
+    "gliner25",
+    "d1_2b"
+   ],
+   "reference": "sage2",
+   "datasets": {
+    "fatura": {
+     "items": 62,
+     "fields": 606,
+     "acc": {
+      "sage2": 91.58415841584159,
+      "clairic": 88.44884488448845,
+      "nuextract3": 89.76897689768977,
+      "schematron3b": 85.8085808580858,
+      "gliner25": 68.64686468646865,
+      "d1_2b": 85.31353135313532
+     },
+     "absent_fields": 166,
+     "absent_correct": {
+      "sage2": 96.98795180722891,
+      "clairic": 84.93975903614458,
+      "nuextract3": 92.16867469879519,
+      "schematron3b": 92.7710843373494,
+      "gliner25": 63.25301204819277,
+      "d1_2b": 82.53012048192771
+     },
+     "diff_vs_ref": {
+      "clairic": {
+       "diff": -3.135313531353134,
+       "ci95": [
+        -5.132450331125838,
+        -1.3136288998357912
+       ],
+       "sig": true
+      },
+      "nuextract3": {
+       "diff": -1.8151815181518174,
+       "ci95": [
+        -3.316749585406299,
+        -0.332225913621258
+       ],
+       "sig": true
+      },
+      "schematron3b": {
+       "diff": -5.775577557755781,
+       "ci95": [
+        -7.717569786535307,
+        -4.058441558441558
+       ],
+       "sig": true
+      },
+      "gliner25": {
+       "diff": -22.93729372937294,
+       "ci95": [
+        -26.094003241491095,
+        -19.93299832495812
+       ],
+       "sig": true
+      },
+      "d1_2b": {
+       "diff": -6.270627062706268,
+       "ci95": [
+        -8.264462809917362,
+        -4.333333333333329
+       ],
+       "sig": true
+      }
+     }
+    },
+    "omniai": {
+     "items": 95,
+     "fields": 1524,
+     "acc": {
+      "sage2": 74.13931088349108,
+      "clairic": 70.85665481573415,
+      "nuextract3": 84.71412753683283,
+      "schematron3b": 55.588628824360725,
+      "gliner25": 39.544835772168135,
+      "d1_2b": 50.675610706541434
+     },
+     "absent_fields": 51,
+     "absent_correct": {
+      "sage2": 84.31372549019608,
+      "clairic": 43.13725490196079,
+      "nuextract3": 98.03921568627452,
+      "schematron3b": 74.50980392156863,
+      "gliner25": 43.13725490196079,
+      "d1_2b": 56.86274509803921
+     },
+     "diff_vs_ref": {
+      "clairic": {
+       "diff": -3.282656067756932,
+       "ci95": [
+        -6.120651684073508,
+        -0.37315235986162065
+       ],
+       "sig": true
+      },
+      "nuextract3": {
+       "diff": 10.574816653341756,
+       "ci95": [
+        5.845722668856723,
+        14.620055666379074
+       ],
+       "sig": true
+      },
+      "schematron3b": {
+       "diff": -18.550682059130352,
+       "ci95": [
+        -23.425786508524823,
+        -13.705801093170585
+       ],
+       "sig": true
+      },
+      "gliner25": {
+       "diff": -34.59447511132294,
+       "ci95": [
+        -38.5234727358064,
+        -30.768870781672504
+       ],
+       "sig": true
+      },
+      "d1_2b": {
+       "diff": -23.463700176949644,
+       "ci95": [
+        -26.895039046400832,
+        -19.723903684781035
+       ],
+       "sig": true
+      }
+     }
+    },
+    "docvqa": {
+     "items": 139,
+     "fields": 139,
+     "acc": {
+      "sage2": 73.60059419551048,
+      "clairic": 75.41212473144606,
+      "nuextract3": 71.83090297601626,
+      "schematron3b": 49.64456543498573,
+      "gliner25": 11.267557382665297,
+      "d1_2b": 61.68447936667321
+     },
+     "absent_fields": 0,
+     "absent_correct": {
+      "sage2": null,
+      "clairic": null,
+      "nuextract3": null,
+      "schematron3b": null,
+      "gliner25": null,
+      "d1_2b": null
+     },
+     "diff_vs_ref": {
+      "clairic": {
+       "diff": 1.8115305359355744,
+       "ci95": [
+        -4.488831603502703,
+        8.063037744787081
+       ],
+       "sig": false
+      },
+      "nuextract3": {
+       "diff": -1.76969121949422,
+       "ci95": [
+        -8.550429794721296,
+        4.593702905574247
+       ],
+       "sig": false
+      },
+      "schematron3b": {
+       "diff": -23.956028760524752,
+       "ci95": [
+        -32.06333388518166,
+        -15.734078385602018
+       ],
+       "sig": true
+      },
+      "gliner25": {
+       "diff": -62.33303681284519,
+       "ci95": [
+        -69.88964405164624,
+        -54.05868913000599
+       ],
+       "sig": true
+      },
+      "d1_2b": {
+       "diff": -11.916114828837273,
+       "ci95": [
+        -18.654588816459317,
+        -5.853732598336926
+       ],
+       "sig": true
+      }
+     }
+    },
+    "vrdu": {
+     "items": 131,
+     "fields": 971,
+     "acc": {
+      "sage2": 67.0592109092143,
+      "clairic": 59.99224802713054,
+      "nuextract3": 68.70525955537472,
+      "schematron3b": 56.20421738167675,
+      "gliner25": 34.138723396186684,
+      "d1_2b": 58.39165394380403
+     },
+     "absent_fields": 231,
+     "absent_correct": {
+      "sage2": 52.38095238095238,
+      "clairic": 19.913419913419915,
+      "nuextract3": 26.83982683982684,
+      "schematron3b": 25.10822510822511,
+      "gliner25": 11.688311688311689,
+      "d1_2b": 20.346320346320347
+     },
+     "diff_vs_ref": {
+      "clairic": {
+       "diff": -7.066962882083757,
+       "ci95": [
+        -10.286043036027166,
+        -3.698274151732207
+       ],
+       "sig": true
+      },
+      "nuextract3": {
+       "diff": 1.6460486461604233,
+       "ci95": [
+        -2.303606078841881,
+        5.595940295221894
+       ],
+       "sig": false
+      },
+      "schematron3b": {
+       "diff": -10.854993527537552,
+       "ci95": [
+        -15.847265112061038,
+        -5.753427812008418
+       ],
+       "sig": true
+      },
+      "gliner25": {
+       "diff": -32.920487513027616,
+       "ci95": [
+        -37.446510400087526,
+        -28.714924878503993
+       ],
+       "sig": true
+      },
+      "d1_2b": {
+       "diff": -8.66755696541027,
+       "ci95": [
+        -11.644070807677096,
+        -5.671121495928368
+       ],
+       "sig": true
+      }
+     }
+    },
+    "realdoc": {
+     "items": 70,
+     "fields": 216,
+     "acc": {
+      "sage2": 41.666666666666664,
+      "clairic": 40.27777777777778,
+      "nuextract3": 54.629629629629626,
+      "schematron3b": 32.870370370370374,
+      "gliner25": 18.51851851851852,
+      "d1_2b": 22.685185185185187
+     },
+     "absent_fields": 18,
+     "absent_correct": {
+      "sage2": 50.0,
+      "clairic": 16.666666666666668,
+      "nuextract3": 55.55555555555556,
+      "schematron3b": 50.0,
+      "gliner25": 61.111111111111114,
+      "d1_2b": 55.55555555555556
+     },
+     "diff_vs_ref": {
+      "clairic": {
+       "diff": -1.3888888888888857,
+       "ci95": [
+        -8.583690987124463,
+        5.4054054054054035
+       ],
+       "sig": false
+      },
+      "nuextract3": {
+       "diff": 12.962962962962962,
+       "ci95": [
+        4.035874439461885,
+        21.808510638297868
+       ],
+       "sig": true
+      },
+      "schematron3b": {
+       "diff": -8.79629629629629,
+       "ci95": [
+        -18.660287081339714,
+        0.46082949308755516
+       ],
+       "sig": false
+      },
+      "gliner25": {
+       "diff": -23.148148148148145,
+       "ci95": [
+        -31.355932203389834,
+        -14.46808510638298
+       ],
+       "sig": true
+      },
+      "d1_2b": {
+       "diff": -18.981481481481477,
+       "ci95": [
+        -27.272727272727273,
+        -10.27027027027027
+       ],
+       "sig": true
+      }
+     }
+    },
+    "kleister_nda": {
+     "items": 31,
+     "fields": 93,
+     "acc": {
+      "sage2": 94.6236559139785,
+      "clairic": 94.6236559139785,
+      "nuextract3": 81.72043010752688,
+      "schematron3b": 80.64516129032258,
+      "gliner25": 45.16129032258065,
+      "d1_2b": 77.41935483870968
+     },
+     "absent_fields": 23,
+     "absent_correct": {
+      "sage2": 82.6086956521739,
+      "clairic": 91.30434782608695,
+      "nuextract3": 43.47826086956522,
+      "schematron3b": 47.82608695652174,
+      "gliner25": 8.695652173913043,
+      "d1_2b": 69.56521739130434
+     },
+     "diff_vs_ref": {
+      "clairic": {
+       "diff": 0.0,
+       "ci95": [
+        -5.376344086021504,
+        5.376344086021504
+       ],
+       "sig": false
+      },
+      "nuextract3": {
+       "diff": -12.903225806451616,
+       "ci95": [
+        -21.505376344086017,
+        -5.376344086021504
+       ],
+       "sig": true
+      },
+      "schematron3b": {
+       "diff": -13.97849462365592,
+       "ci95": [
+        -21.505376344086017,
+        -7.526881720430097
+       ],
+       "sig": true
+      },
+      "gliner25": {
+       "diff": -49.46236559139785,
+       "ci95": [
+        -58.064516129032256,
+        -40.86021505376344
+       ],
+       "sig": true
+      },
+      "d1_2b": {
+       "diff": -17.204301075268816,
+       "ci95": [
+        -27.956989247311824,
+        -7.526881720430097
+       ],
+       "sig": true
+      }
+     }
+    },
+    "kleister_charity": {
+     "items": 44,
+     "fields": 344,
+     "acc": {
+      "sage2": 84.30232558139535,
+      "clairic": 86.9186046511628,
+      "nuextract3": 77.90697674418605,
+      "schematron3b": 65.40697674418605,
+      "gliner25": 39.24418604651163,
+      "d1_2b": 68.6046511627907
+     },
+     "absent_fields": 14,
+     "absent_correct": {
+      "sage2": 50.0,
+      "clairic": 64.28571428571429,
+      "nuextract3": 57.142857142857146,
+      "schematron3b": 64.28571428571429,
+      "gliner25": 35.714285714285715,
+      "d1_2b": 78.57142857142857
+     },
+     "diff_vs_ref": {
+      "clairic": {
+       "diff": 2.616279069767444,
+       "ci95": [
+        -0.2906976744186096,
+        5.780346820809243
+       ],
+       "sig": false
+      },
+      "nuextract3": {
+       "diff": -6.395348837209298,
+       "ci95": [
+        -9.649122807017534,
+        -3.1884057971014386
+       ],
+       "sig": true
+      },
+      "schematron3b": {
+       "diff": -18.895348837209298,
+       "ci95": [
+        -23.684210526315795,
+        -14.24418604651163
+       ],
+       "sig": true
+      },
+      "gliner25": {
+       "diff": -45.05813953488372,
+       "ci95": [
+        -50.00000000000001,
+        -40.35087719298245
+       ],
+       "sig": true
+      },
+      "d1_2b": {
+       "diff": -15.697674418604649,
+       "ci95": [
+        -20.058139534883722,
+        -11.33720930232559
+       ],
+       "sig": true
+      }
+     }
+    },
+    "emails": {
+     "items": 45,
+     "fields": 45,
+     "acc": {
+      "sage2": 80.0,
+      "clairic": 66.66666666666667,
+      "nuextract3": 88.88888888888889,
+      "schematron3b": 95.55555555555556,
+      "gliner25": 46.666666666666664,
+      "d1_2b": 57.77777777777778
+     },
+     "absent_fields": 0,
+     "absent_correct": {
+      "sage2": null,
+      "clairic": null,
+      "nuextract3": null,
+      "schematron3b": null,
+      "gliner25": null,
+      "d1_2b": null
+     },
+     "diff_vs_ref": {
+      "clairic": {
+       "diff": -13.333333333333329,
+       "ci95": [
+        -33.333333333333336,
+        6.666666666666671
+       ],
+       "sig": false
+      },
+      "nuextract3": {
+       "diff": 8.888888888888886,
+       "ci95": [
+        -6.666666666666671,
+        24.444444444444443
+       ],
+       "sig": false
+      },
+      "schematron3b": {
+       "diff": 15.555555555555557,
+       "ci95": [
+        4.444444444444443,
+        28.888888888888886
+       ],
+       "sig": true
+      },
+      "gliner25": {
+       "diff": -33.333333333333336,
+       "ci95": [
+        -53.33333333333333,
+        -13.333333333333336
+       ],
+       "sig": true
+      },
+      "d1_2b": {
+       "diff": -22.22222222222222,
+       "ci95": [
+        -42.22222222222222,
+        -2.2222222222222143
+       ],
+       "sig": true
+      }
+     }
+    },
+    "tatqa": {
+     "items": 24,
+     "fields": 24,
+     "acc": {
+      "sage2": 83.48957507531314,
+      "clairic": 79.41358557583126,
+      "nuextract3": 88.47242527410289,
+      "schematron3b": 38.306027274724975,
+      "gliner25": 3.571428571428571,
+      "d1_2b": 68.05902992791184
+     },
+     "absent_fields": 0,
+     "absent_correct": {
+      "sage2": null,
+      "clairic": null,
+      "nuextract3": null,
+      "schematron3b": null,
+      "gliner25": null,
+      "d1_2b": null
+     },
+     "diff_vs_ref": {
+      "clairic": {
+       "diff": -4.075989499481878,
+       "ci95": [
+        -19.388108016014996,
+        11.236942292197256
+       ],
+       "sig": false
+      },
+      "nuextract3": {
+       "diff": 4.982850198789748,
+       "ci95": [
+        -0.25352733686067097,
+        11.549329150685054
+       ],
+       "sig": false
+      },
+      "schematron3b": {
+       "diff": -45.183547800588165,
+       "ci95": [
+        -66.67353874029446,
+        -23.683469535996302
+       ],
+       "sig": true
+      },
+      "gliner25": {
+       "diff": -79.91814650388457,
+       "ci95": [
+        -93.78369272237195,
+        -64.73957507531313
+       ],
+       "sig": true
+      },
+      "d1_2b": {
+       "diff": -15.430545147401304,
+       "ci95": [
+        -31.94444444444447,
+        -0.6314928294098365
+       ],
+       "sig": true
+      }
+     }
+    },
+    "squad2": {
+     "items": 57,
+     "fields": 57,
+     "acc": {
+      "sage2": 92.0705507083216,
+      "clairic": 94.73684210526316,
+      "nuextract3": 58.9786683904331,
+      "schematron3b": 41.128107575894084,
+      "gliner25": 52.63157894736842,
+      "d1_2b": 87.14829030618503
+     },
+     "absent_fields": 27,
+     "absent_correct": {
+      "sage2": 88.88888888888889,
+      "clairic": 92.5925925925926,
+      "nuextract3": 25.925925925925927,
+      "schematron3b": 25.925925925925927,
+      "gliner25": 85.18518518518519,
+      "d1_2b": 81.48148148148148
+     },
+     "diff_vs_ref": {
+      "clairic": {
+       "diff": 2.66629139694156,
+       "ci95": [
+        -3.0753353973168203,
+        9.22975888920162
+       ],
+       "sig": false
+      },
+      "nuextract3": {
+       "diff": -33.091882317888505,
+       "ci95": [
+        -45.775373577231136,
+        -19.38178780284042
+       ],
+       "sig": true
+      },
+      "schematron3b": {
+       "diff": -50.94244313242752,
+       "ci95": [
+        -62.842055547415065,
+        -37.53815973611479
+       ],
+       "sig": true
+      },
+      "gliner25": {
+       "diff": -39.43897176095319,
+       "ci95": [
+        -53.250773993808046,
+        -24.784688995215305
+       ],
+       "sig": true
+      },
+      "d1_2b": {
+       "diff": -4.922260402136573,
+       "ci95": [
+        -14.204440210632171,
+        4.342908553434853
+       ],
+       "sig": false
+      }
+     }
+    },
+    "sroie": {
+     "items": 143,
+     "fields": 516,
+     "acc": {
+      "sage2": 65.69767441860465,
+      "clairic": 67.05426356589147,
+      "nuextract3": 68.02325581395348,
+      "schematron3b": 61.04651162790697,
+      "gliner25": 32.751937984496124,
+      "d1_2b": 60.46511627906977
+     },
+     "absent_fields": 0,
+     "absent_correct": {
+      "sage2": null,
+      "clairic": null,
+      "nuextract3": null,
+      "schematron3b": null,
+      "gliner25": null,
+      "d1_2b": null
+     },
+     "diff_vs_ref": {
+      "clairic": {
+       "diff": 1.356589147286826,
+       "ci95": [
+        -1.1627906976744242,
+        3.8387715930902147
+       ],
+       "sig": false
+      },
+      "nuextract3": {
+       "diff": 2.3255813953488342,
+       "ci95": [
+        -0.19342359767892958,
+        4.8828125
+       ],
+       "sig": false
+      },
+      "schematron3b": {
+       "diff": -4.651162790697676,
+       "ci95": [
+        -7.80952380952381,
+        -1.181102362204733
+       ],
+       "sig": true
+      },
+      "gliner25": {
+       "diff": -32.945736434108525,
+       "ci95": [
+        -36.7504835589942,
+        -28.769841269841265
+       ],
+       "sig": true
+      },
+      "d1_2b": {
+       "diff": -5.232558139534881,
+       "ci95": [
+        -8.171206225680933,
+        -2.3076923076923066
+       ],
+       "sig": true
+      }
+     }
+    },
+    "cord": {
+     "items": 79,
+     "fields": 940,
+     "acc": {
+      "sage2": 53.154857445031006,
+      "clairic": 51.12269790935558,
+      "nuextract3": 54.07976440603394,
+      "schematron3b": 48.584356516132644,
+      "gliner25": 44.15724110404961,
+      "d1_2b": 46.191489361702125
+     },
+     "absent_fields": 404,
+     "absent_correct": {
+      "sage2": 98.26732673267327,
+      "clairic": 86.63366336633663,
+      "nuextract3": 88.86138613861387,
+      "schematron3b": 98.26732673267327,
+      "gliner25": 89.10891089108911,
+      "d1_2b": 88.61386138613861
+     },
+     "diff_vs_ref": {
+      "clairic": {
+       "diff": -2.032159535675426,
+       "ci95": [
+        -4.46133311624245,
+        0.6506276851587032
+       ],
+       "sig": false
+      },
+      "nuextract3": {
+       "diff": 0.9249069610029323,
+       "ci95": [
+        -1.477865346865812,
+        3.2778341765883923
+       ],
+       "sig": false
+      },
+      "schematron3b": {
+       "diff": -4.570500928898362,
+       "ci95": [
+        -7.415690450834219,
+        -1.7526333626227242
+       ],
+       "sig": true
+      },
+      "gliner25": {
+       "diff": -8.997616340981395,
+       "ci95": [
+        -11.820330969267154,
+        -6.202911064732135
+       ],
+       "sig": true
+      },
+      "d1_2b": {
+       "diff": -6.963368083328881,
+       "ci95": [
+        -9.88024657818832,
+        -4.219520432286409
+       ],
+       "sig": true
+      }
+     }
+    }
+   },
+   "mean_sets": [
+    "fatura",
+    "omniai",
+    "docvqa",
+    "vrdu",
+    "realdoc",
+    "kleister_nda",
+    "kleister_charity",
+    "emails",
+    "tatqa",
+    "squad2"
+   ],
+   "mean": {
+    "sage2": 78.25360483497327,
+    "clairic": 75.73470051494792,
+    "nuextract3": 76.5616286000681,
+    "schematron3b": 60.115819131016266,
+    "gliner25": 35.93916503105632,
+    "d1_2b": 63.77595645687141
+   },
+   "mean_all_sets": {
+    "sage2": 75.11571501778069,
+    "clairic": 72.96033055206051,
+    "nuextract3": 73.97660885172237,
+    "schematron3b": 59.232421621183526,
+    "gliner25": 36.35840244992574,
+    "d1_2b": 62.0346808507905
+   },
+   "absent_correct_mean": {
+    "sage2": 72.16860203134858,
+    "clairic": 58.97710788894083,
+    "nuextract3": 57.02147381697148,
+    "schematron3b": 54.34669150504358,
+    "gliner25": 44.112116117565755,
+    "d1_2b": 63.558981275151034
+   },
+   "absent_sets": [
+    "fatura",
+    "omniai",
+    "vrdu",
+    "realdoc",
+    "kleister_nda",
+    "kleister_charity",
+    "squad2"
+   ],
+   "mean_diff_vs_ref": {
+    "clairic": {
+     "diff": -2.5189043200253565,
+     "ci95": [
+      -5.382709968172023,
+      0.38072442132124706
+     ],
+     "sig": false
+    },
+    "nuextract3": {
+     "diff": -1.6919762349051695,
+     "ci95": [
+      -4.274832243948097,
+      0.9201389163926592
+     ],
+     "sig": false
+    },
+    "schematron3b": {
+     "diff": -18.137785703957007,
+     "ci95": [
+      -21.44750213994095,
+      -14.971625800685544
+     ],
+     "sig": true
+    },
+    "gliner25": {
+     "diff": -42.314439803916954,
+     "ci95": [
+      -45.45398362757912,
+      -38.881676543284584
+     ],
+     "sig": true
+    },
+    "d1_2b": {
+     "diff": -14.477648378101861,
+     "ci95": [
+      -17.68565662405642,
+      -11.307242958072152
+     ],
+     "sig": true
+    }
+   }
+  },
+  "image": {
+   "systems": [
+    "sage2",
+    "clairic_img",
+    "d1_2b_img"
+   ],
+   "reference": "sage2",
+   "datasets": {
+    "fatura": {
+     "items": 62,
+     "fields": 606,
+     "acc": {
+      "sage2": 91.58415841584159,
+      "clairic_img": 93.56435643564356,
+      "d1_2b_img": 92.07920792079207
+     },
+     "absent_fields": 166,
+     "absent_correct": {
+      "sage2": 96.98795180722891,
+      "clairic_img": 87.34939759036145,
+      "d1_2b_img": 95.78313253012048
+     },
+     "diff_vs_ref": {
+      "clairic_img": {
+       "diff": 1.9801980198019749,
+       "ci95": [
+        -0.6578947368420955,
+        4.582651391162031
+       ],
+       "sig": false
+      },
+      "d1_2b_img": {
+       "diff": 0.4950495049504866,
+       "ci95": [
+        -1.3245033112582831,
+        2.317880794701992
+       ],
+       "sig": false
+      }
+     }
+    },
+    "omniai": {
+     "items": 95,
+     "fields": 1524,
+     "acc": {
+      "sage2": 74.13931088349108,
+      "clairic_img": 73.3576322933223,
+      "d1_2b_img": 59.16770566574044
+     },
+     "absent_fields": 51,
+     "absent_correct": {
+      "sage2": 84.31372549019608,
+      "clairic_img": 64.70588235294117,
+      "d1_2b_img": 64.70588235294117
+     },
+     "diff_vs_ref": {
+      "clairic_img": {
+       "diff": -0.7816785901687808,
+       "ci95": [
+        -3.5872311749653534,
+        2.026134368439031
+       ],
+       "sig": false
+      },
+      "d1_2b_img": {
+       "diff": -14.971605217750636,
+       "ci95": [
+        -18.26395071447235,
+        -11.44917525041484
+       ],
+       "sig": true
+      }
+     }
+    },
+    "docvqa": {
+     "items": 139,
+     "fields": 139,
+     "acc": {
+      "sage2": 73.60059419551048,
+      "clairic_img": 88.3292138807842,
+      "d1_2b_img": 82.1948393538865
+     },
+     "absent_fields": 0,
+     "absent_correct": {
+      "sage2": null,
+      "clairic_img": null,
+      "d1_2b_img": null
+     },
+     "diff_vs_ref": {
+      "clairic_img": {
+       "diff": 14.728619685273713,
+       "ci95": [
+        9.065949653046701,
+        20.960290191881214
+       ],
+       "sig": true
+      },
+      "d1_2b_img": {
+       "diff": 8.594245158376012,
+       "ci95": [
+        2.6796690834934083,
+        14.809060151116029
+       ],
+       "sig": true
+      }
+     }
+    },
+    "vrdu": {
+     "items": 131,
+     "fields": 971,
+     "acc": {
+      "sage2": 67.0592109092143,
+      "clairic_img": 63.41400826659769,
+      "d1_2b_img": 59.08334280861089
+     },
+     "absent_fields": 231,
+     "absent_correct": {
+      "sage2": 52.38095238095238,
+      "clairic_img": 18.614718614718615,
+      "d1_2b_img": 29.437229437229437
+     },
+     "diff_vs_ref": {
+      "clairic_img": {
+       "diff": -3.64520264261661,
+       "ci95": [
+        -7.5065543770766325,
+        0.05424760453912825
+       ],
+       "sig": false
+      },
+      "d1_2b_img": {
+       "diff": -7.975868100603414,
+       "ci95": [
+        -11.0456605888009,
+        -4.817962015093379
+       ],
+       "sig": true
+      }
+     }
+    },
+    "realdoc": {
+     "items": 70,
+     "fields": 216,
+     "acc": {
+      "sage2": 41.666666666666664,
+      "clairic_img": 62.96296296296296,
+      "d1_2b_img": 26.85185185185185
+     },
+     "absent_fields": 18,
+     "absent_correct": {
+      "sage2": 50.0,
+      "clairic_img": 38.888888888888886,
+      "d1_2b_img": 38.888888888888886
+     },
+     "diff_vs_ref": {
+      "clairic_img": {
+       "diff": 21.296296296296298,
+       "ci95": [
+        12.422360248447205,
+        30.61224489795918
+       ],
+       "sig": true
+      },
+      "d1_2b_img": {
+       "diff": -14.814814814814813,
+       "ci95": [
+        -22.916666666666664,
+        -5.714285714285712
+       ],
+       "sig": true
+      }
+     }
+    },
+    "sroie": {
+     "items": 143,
+     "fields": 516,
+     "acc": {
+      "sage2": 65.69767441860465,
+      "clairic_img": 75.7751937984496,
+      "d1_2b_img": 62.2093023255814
+     },
+     "absent_fields": 0,
+     "absent_correct": {
+      "sage2": null,
+      "clairic_img": null,
+      "d1_2b_img": null
+     },
+     "diff_vs_ref": {
+      "clairic_img": {
+       "diff": 10.077519379844958,
+       "ci95": [
+        6.213592233009706,
+        13.872832369942188
+       ],
+       "sig": true
+      },
+      "d1_2b_img": {
+       "diff": -3.4883720930232514,
+       "ci95": [
+        -6.407766990291272,
+        -0.5825242718446617
+       ],
+       "sig": true
+      }
+     }
+    },
+    "cord": {
+     "items": 79,
+     "fields": 940,
+     "acc": {
+      "sage2": 53.154857445031006,
+      "clairic_img": 82.77887134193793,
+      "d1_2b_img": 51.90070921985815
+     },
+     "absent_fields": 404,
+     "absent_correct": {
+      "sage2": 98.26732673267327,
+      "clairic_img": 80.1980198019802,
+      "d1_2b_img": 95.04950495049505
+     },
+     "diff_vs_ref": {
+      "clairic_img": {
+       "diff": 29.624013896906924,
+       "ci95": [
+        25.688040466488317,
+        33.520253815365216
+       ],
+       "sig": true
+      },
+      "d1_2b_img": {
+       "diff": -1.2541482251728553,
+       "ci95": [
+        -3.589426541912701,
+        1.1308038319436164
+       ],
+       "sig": false
+      }
+     }
+    }
+   },
+   "mean_sets": [
+    "fatura",
+    "omniai",
+    "docvqa",
+    "vrdu",
+    "realdoc"
+   ],
+   "mean": {
+    "sage2": 69.60998821414482,
+    "clairic_img": 76.32563476786216,
+    "d1_2b_img": 63.87538952017635
+   },
+   "mean_all_sets": {
+    "sage2": 66.70035327633711,
+    "clairic_img": 77.16889128281403,
+    "d1_2b_img": 61.92670844947447
+   },
+   "absent_correct_mean": {
+    "sage2": 70.92065741959433,
+    "clairic_img": 52.38972186172753,
+    "d1_2b_img": 57.203783302294994
+   },
+   "absent_sets": [
+    "fatura",
+    "omniai",
+    "vrdu",
+    "realdoc"
+   ],
+   "mean_diff_vs_ref": {
+    "clairic_img": {
+     "diff": 6.715646553717335,
+     "ci95": [
+      4.291238398297466,
+      9.33285391638212
+     ],
+     "sig": true
+    },
+    "d1_2b_img": {
+     "diff": -5.734598693968472,
+     "ci95": [
+      -8.161195426637853,
+      -3.2750967751174045
+     ],
+     "sig": true
+    }
+   }
+  }
+ },
+ "excluded": {
+  "rule": "garbled_ocr",
+  "flagged_fields": 215
+ }
+}

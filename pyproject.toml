@@ -21,6 +21,7 @@ dependencies = ["httpx>=0.27", "tiktoken>=0.7"]
 [project.optional-dependencies]
 dev = ["pytest>=8"]
 figures = ["matplotlib>=3.8"]
+analysis = ["rapidfuzz>=3"]
 
 [project.scripts]
 extract-bench = "extract_bench.cli:main"

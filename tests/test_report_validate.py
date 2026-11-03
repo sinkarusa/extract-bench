@@ -48,12 +48,26 @@ def test_report_reproduces_published_board():
     b = R.board(RESULTS / "v0.1", "v0.1", "eval")
     text = b["boards"]["text"]
     assert {k: round(v, 1) for k, v in text["mean"].items()} == {
-        "sage2": 77.8, "clairic": 75.3, "nuextract3": 76.1, "schematron3b": 59.9, "gliner25": 35.7, "d1_2b": 63.5}
+        "sage2": 77.8, "clairic": 75.3, "nuextract3": 76.1, "schematron3b": 59.9, "gliner25": 35.7, "d1_2b": 63.4}
     assert len(text["mean_sets"]) == 10 and "sroie" not in text["mean_sets"]
     d = text["mean_diff_vs_ref"]["clairic"]
     assert (round(d["ci95"][0], 1), round(d["ci95"][1], 1), d["sig"]) == (-5.4, 0.2, False)
     committed = json.loads((RESULTS / "v0.1" / "board.json").read_text())
     assert committed["boards"]["text"]["mean"] == pytest.approx(text["mean"])
+
+
+def test_exclude_drops_the_field_for_every_system():
+    systems = ["sage2", "clairic", "d1_2b"]
+    recs = {s: R.load_system(RESULTS / "v0.1", s)[1] for s in systems}
+    items = {it["id"]: it for it in load_items("sroie")}
+    ids = sorted(SPLIT["sroie"]["eval"])
+    full = R.compare(systems, "sage2", items, ids, recs)
+    iid = ids[0]
+    one = R.compare(systems, "sage2", items, ids, recs, exclude={("sroie", iid): {"company"}})
+    assert (one["items"], one["fields"]) == (full["items"], full["fields"] - 1)
+    for s in systems:                                  # exactly that field's score leaves each system's total
+        dropped = R.field_scores(items[iid], recs[s][("sroie", iid)])["company"][0]
+        assert full["acc"][s] * full["fields"] / 100 - one["acc"][s] * one["fields"] / 100 == pytest.approx(dropped)
 
 
 def test_validate_accepts_published_results():

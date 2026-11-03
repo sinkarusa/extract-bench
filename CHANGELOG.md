@@ -10,7 +10,15 @@ Package releases follow semver.
   read question per field, one forward pass per document, bf16 on one RTX 3090, model code pinned to revision
   `10e7671d`. The runner keeps every read's span and the import answers at calibrated `found` >= 0.5, d1's own cut
   (d1 itself also dropped spans whose raw `found` was under 0.5; 391 fields recovered). d1 has no list read, so each
-  list field gets one value. The other systems' scores don't change.
+  list field gets one value. Its questions carry Clairic's unit hints (money: the field's unit, else "currency";
+  number: its unit). The other systems' scores don't change.
+- d1-2B with the page image joins the image board as `d1_2b_img`, with `clairic_vision_ocr`'s input: the item's original
+  page files (at most 4, Clairic's size checks) plus the same text and questions, at d1's trained 1.6 MP picture cap.
+  63.2 against Sage 2's 69.1 and Clairic + image's 75.7; lifting the cap to 16.7 MP scored 62.9.
+- `scripts/flag_garbled_ocr.py` writes `results/v0.1/garbled_ocr.json`: fields whose printed answer the OCR text holds
+  only misread (215 fields, 118 in the eval half). `extract-bench report --exclude-garbled-ocr` drops them for every
+  system and writes `board.no_garbled_ocr.*`; the text-board order and gaps don't change. The script needs the new
+  `analysis` extra (rapidfuzz).
 - `score._cents` no longer raises `InvalidOperation` on money values beyond 28 significant digits (a multi-line span
   whose digit runs parse as one number); such a value now scores 0.
 

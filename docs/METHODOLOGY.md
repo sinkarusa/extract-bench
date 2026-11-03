@@ -27,8 +27,14 @@ Every system reads byte-identical text for an item. Where the text comes from de
 Tesseract finds no text on 4 SROIE pages and 4 CORD pages. For those items, the runner records every field as null for
 systems that read text only. It doesn't drop the item.
 
-Results that also give the system the page image (`clairic_img`, which is Clairic with the image plus the same text) go
-on a separate board, `extract-bench report --board image`. They never mix with the text board.
+Results that also give the system the page image go on a separate board, `extract-bench report --board image`. They
+never mix with the text board. `clairic_img` is Clairic with the image plus the same text; `d1_2b_img` gives d1-2B the
+same input: the item's original page files (at most 4, Clairic's size checks) plus the same text and questions.
+
+`extract-bench report --exclude-garbled-ocr` also drops, for every system, the fields `scripts/flag_garbled_ocr.py`
+flags in `results/v0.1/garbled_ocr.json`: the answer is printed, but the OCR text holds it only misread (no span scores
+correct, one does after at most a few look-alike character fixes). It never flags native text, "not in the document"
+fields, fixed-option fields, or answers missing from the text.
 
 ## 3. How each system is asked
 
@@ -42,7 +48,7 @@ Each system gets the same field definitions in its own request format. The adapt
 | NuExtract3 | A JSON template with NuExtract types, the definitions passed as the `instructions` chat-template argument, thinking off | 32k context; the runner skips longer prompts |
 | Schematron-3B | A draft-07 JSON Schema with the definitions as descriptions, the model card's prompt, the text wrapped in minimal HTML, schema-constrained decoding | 32k context |
 | GLiNER2.5 | One entity label per field, with the definition as its description. A scalar field takes the most confident span; a list field takes every span | 1,800-character chunks that overlap by 300 characters |
-| d1-2B | One `system_one` read question per field (text, number, date; money as a number with its unit; time and duration as text), the definition as `instructions`, one forward pass with no generated tokens. Every read keeps its likeliest span, and a field answers when its calibrated `found` reaches 0.5 (`open_extractors.D1_FOUND`). d1 has no list read, so a list field gets one value | The whole document (128k context; the longest v0.1 document is under 13k tokens) |
+| d1-2B | One `system_one` read question per field (text, number, date; money as a number with its unit, else "currency", and number with its unit, as Clairic gets them; time and duration as text), the definition as `instructions`, one forward pass with no generated tokens. Every read keeps its likeliest span, and a field answers when its calibrated `found` reaches 0.5 (`open_extractors.D1_FOUND`). d1 has no list read, so a list field gets one value | The whole document (128k context; the longest v0.1 document is under 13k tokens) |
 
 The generative open-weight models decode greedily, at temperature 0. Nobody tuned any system's prompt on test items. Levanto
 fitted Sage 2's abstention thresholds on the `fit` half (see §6).

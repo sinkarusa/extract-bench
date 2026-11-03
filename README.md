@@ -19,7 +19,7 @@ labels from 12 public datasets of invoices, receipts, forms, contracts, reports,
 | 1 | Sage 2 (rc9 preview, fast) \* | Levanto | API | 77.8 | reference | 72.2 |
 | 2 | NuExtract3 | NuMind | open (4B) | 76.1 | −1.7 [−4.3, +0.9] | 57.0 |
 | 3 | Clairic | Cloudflare | API | 75.3 | −2.5 [−5.4, +0.2] | 59.0 |
-| 4 | d1-2B | Liquid AI | open (2B) | 63.5 | −14.4 [−17.3, −11.1] | 63.7 |
+| 4 | d1-2B | Liquid AI | open (2B) | 63.4 | −14.4 [−17.3, −11.2] | 63.6 |
 | 5 | Schematron-3B | Inference.net | open (3B) | 59.9 | −17.9 [−21.1, −14.8] | 54.3 |
 | 6 | GLiNER2.5 | Fastino | open (194M) | 35.7 | −42.1 [−45.4, −38.9] | 44.1 |
 
@@ -34,6 +34,27 @@ labels from 12 public datasets of invoices, receipts, forms, contracts, reports,
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/sage2-vs-clairic-dark.png">
   <img alt="Sage 2 minus Clairic per dataset with 95% bootstrap intervals" src="docs/images/sage2-vs-clairic.png">
 </picture>
+
+### Without garbled OCR
+
+`scripts/flag_garbled_ocr.py` flags fields whose answer is printed but whose OCR text holds it only misread
+(`INVI55` for `INV/55`, `O.I.Y.` for `D.I.Y.`, `155` for `1.55`): no span of the text scores correct, but one does after
+a few look-alike character fixes. Fields the OCR dropped, or whose gold is computed or reworded, stay in. It flags 215
+fields on the OCR datasets, 118 of them in the eval half (SROIE has 56). Of 44 eval-half flags checked by eye (36 against
+the page image, 8 Kleister-Charity flags against the text, which has no page images here), 41 are real misreads, 1 is a
+typo in the gold, and 2 couldn't be found on the page. `extract-bench report --exclude-garbled-ocr` drops the flagged
+fields for every system and writes [board.no_garbled_ocr.md](results/v0.1/board.no_garbled_ocr.md).
+
+| System | Field accuracy | Without garbled OCR | Δ vs Sage 2, without garbled OCR |
+|---|---:|---:|---|
+| Sage 2 | 77.8 | 78.3 | reference |
+| NuExtract3 | 76.1 | 76.6 | −1.7 [−4.3, +0.9] |
+| Clairic | 75.3 | 75.7 | −2.5 [−5.4, +0.4] |
+| d1-2B | 63.4 | 63.8 | −14.5 [−17.7, −11.3] |
+| Schematron-3B | 59.9 | 60.1 | −18.1 [−21.4, −15.0] |
+| GLiNER2.5 | 35.7 | 35.9 | −42.3 [−45.5, −38.9] |
+
+Misread OCR costs every system about the same, so the order and the gaps don't change.
 
 
 ## Datasets

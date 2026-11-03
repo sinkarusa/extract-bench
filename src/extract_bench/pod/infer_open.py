@@ -1,6 +1,6 @@
 """GPU side of `extract-bench open`: run one open extraction model over an exported requests file.
 
-  python -m extract_bench.pod.infer_open <model: nuextract3|schematron3b|gliner25|d1_2b> <requests.jsonl> <results.jsonl>
+  python -m extract_bench.pod.infer_open <model: nuextract3|schematron3b|gliner25|d1_2b|d1_2b_img> <requests.jsonl> <results.jsonl>
 
 Needs a CUDA GPU and `pip install vllm "gliner2[local]"` (the published results: vLLM 0.32.0, bf16, one NVIDIA A40;
 gliner2 2.1.0). d1-2B needs `pip install "transformers>=5.19" torch torchvision pillow` and runs bf16 on CUDA (fp32 on
@@ -15,7 +15,7 @@ import json, sys, time
 
 MODEL, REQ, OUT = sys.argv[1], sys.argv[2], sys.argv[3]
 HF = {"nuextract3": "numind/NuExtract3", "schematron3b": "inference-net/Schematron-3B", "gliner25": "fastino/gliner2.5-base-v1",
-      "d1_2b": "LiquidAI/d1-2B"}[MODEL]
+      "d1_2b": "LiquidAI/d1-2B", "d1_2b_img": "LiquidAI/d1-2B"}[MODEL]
 D1_REVISION = "10e7671d44e4b37700020b1eed3f594c5f2af0b4"  # d1-2B ships its own model code; pin it
 MAX_LEN, MAX_NEW = 32768, 4096
 recs = [json.loads(l) for l in open(REQ)]
@@ -26,7 +26,7 @@ pod = {"model": HF}
 
 def put(r, **kw):
     results[r["id"]] = {"id": r["id"], "dataset": r["dataset"], "arm": r["arm"], "text_source": r.get("text_source"),
-                        "empty": r.get("empty", False), "pod": pod, **kw}
+                        "empty": r.get("empty", False), "n_images": r.get("n_images", 0), "pod": pod, **kw}
 
 
 def keep_every_span(engine, torch):
@@ -92,20 +92,25 @@ def main():
         for (r, n), o in zip(keep, outs):
             put(r, text=o.outputs[0].text, finish=o.outputs[0].finish_reason, prompt_tokens=n,
                 out_tokens=len(o.outputs[0].token_ids), wall_ms=per, n_calls=1, error=None)
-    elif MODEL == "d1_2b":
+    elif MODEL in ("d1_2b", "d1_2b_img"):
         import torch, transformers
         from transformers import AutoModel
         device = "cuda" if torch.cuda.is_available() else "cpu"
         dtype = torch.bfloat16 if device == "cuda" else torch.float32
         model = AutoModel.from_pretrained(HF, revision=D1_REVISION, trust_remote_code=True, dtype=dtype).to(device).eval()
         pod.update(revision=D1_REVISION, transformers=transformers.__version__, torch=torch.__version__, device=device,
-                   dtype=str(dtype), gpu=torch.cuda.get_device_name() if device == "cuda" else None, all_spans=True)
+                   dtype=str(dtype), gpu=torch.cuda.get_device_name() if device == "cuda" else None, all_spans=True,
+                   vision_max_pixels=model.engine.max_pixels)  # d1's own cap (config); D1_VISION_MAX_PIXELS overrides
         keep_every_span(model.engine, torch)
         for i, r in enumerate(todo, 1):
             q = r["request"]; t0 = time.time()
+            if r.get("error"):                       # rejected at export (Clairic's image checks)
+                put(r, error=r["error"], n_calls=0)
+                continue
+            media = [{"type": "image", "path": p} for p in q.get("images") or []]  # the original files, page order
             try:
                 with torch.inference_mode():
-                    out = model.system_one(q["state"], q["questions"])
+                    out = model.system_one(q["state"], q["questions"], media=media or None)
                 put(r, answers=out["answers"], prompt_tokens=out["usage"]["input_tokens"],
                     wall_ms=(time.time() - t0) * 1000, n_calls=1, error=None)
             except Exception as ex:  # noqa: BLE001

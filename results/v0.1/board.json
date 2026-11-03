@@ -43,9 +43,24 @@
    "run_date": "2026-11-02",
    "open_weights": true,
    "maintainer_product": false,
-   "notes": "transformers 5.22.1 remote code @ 10e7671d, bf16, one RTX 3090; one system_one call per document (one read question per field, definition as instructions, no generation). Every read keeps its span; a field answers when its calibrated found >= 0.5 (the model's own cut; a fit-half sweep picked 0.40, +0.2 on eval, not used). No list read: list fields get one value. Not tuned.",
+   "notes": "transformers 5.22.1 remote code @ 10e7671d, bf16, one RTX 3090; one system_one call per document (one read question per field, definition as instructions, Clairic's unit hints: money -> number with the field's unit else 'currency', number -> its unit; no generation). Every read keeps its span; a field answers when its calibrated found >= 0.5 (the model's own cut; a fit-half sweep picked 0.40, +0.3 on eval, not used). No list read: list fields get one value. Not tuned.",
    "tier": "self-reported",
    "n_items": 1844
+  },
+  "d1_2b_img": {
+   "system": "d1_2b_img",
+   "benchmark_version": "v0.1",
+   "display_name": "d1-2B + image",
+   "org": "Liquid AI",
+   "model": "LiquidAI/d1-2B",
+   "arm": "d1_2b_img",
+   "input": "image+text",
+   "run_date": "2026-11-02",
+   "open_weights": true,
+   "maintainer_product": false,
+   "notes": "clairic_vision_ocr's input: the item's original page files (<= 4, Clairic's size checks) as system_one media plus the same text and questions as d1_2b; image sets only. d1 caps each picture at its trained 1,638,400 px (checkpoint config); a run with the cap lifted to 16,777,216 px scored 62.9 vs 63.2, so the default is published. Pages rebuilt with each dataset's build.py: FATURA, OmniAI, DocVQA, SROIE, CORD byte-identical to the item metadata; VRDU 664/722 and RealDoc 169/180 byte-identical (others: same pixels, different font/JPEG library bytes). Same runtime and found >= 0.5 cut as d1_2b. Not tuned.",
+   "tier": "self-reported",
+   "n_items": 1457
   },
   "gliner25": {
    "system": "gliner25",
@@ -457,7 +472,7 @@
       "nuextract3": 88.88888888888889,
       "schematron3b": 84.9673202614379,
       "gliner25": 67.97385620915033,
-      "d1_2b": 84.9673202614379
+      "d1_2b": 84.47712418300654
      },
      "absent_fields": 166,
      "absent_correct": {
@@ -466,7 +481,7 @@
       "nuextract3": 92.16867469879519,
       "schematron3b": 92.7710843373494,
       "gliner25": 63.25301204819277,
-      "d1_2b": 83.73493975903614
+      "d1_2b": 82.53012048192771
      },
      "diff_vs_ref": {
       "clairic": {
@@ -502,10 +517,10 @@
        "sig": true
       },
       "d1_2b": {
-       "diff": -5.718954248366018,
+       "diff": -6.209150326797385,
        "ci95": [
-        -7.679738562091501,
-        -3.9087947882736103
+        -8.183306055646483,
+        -4.283360790774296
        ],
        "sig": true
       }
@@ -1087,7 +1102,7 @@
       "nuextract3": 61.36363636363637,
       "schematron3b": 55.24475524475525,
       "gliner25": 29.545454545454547,
-      "d1_2b": 54.37062937062937
+      "d1_2b": 54.54545454545455
      },
      "absent_fields": 0,
      "absent_correct": {
@@ -1132,10 +1147,10 @@
        "sig": true
       },
       "d1_2b": {
-       "diff": -4.895104895104893,
+       "diff": -4.72027972027972,
        "ci95": [
-        -7.692307692307686,
-        -2.2727272727272663
+        -7.342657342657347,
+        -2.0979020979021
        ],
        "sig": true
       }
@@ -1223,7 +1238,7 @@
     "nuextract3": 76.1298935324862,
     "schematron3b": 59.88948148172816,
     "gliner25": 35.71030978016268,
-    "d1_2b": 63.451337952579976
+    "d1_2b": 63.40231834473684
    },
    "mean_all_sets": {
     "sage2": 74.19420704761967,
@@ -1231,7 +1246,7 @@
     "nuextract3": 73.04973255435785,
     "schematron3b": 58.54663968923433,
     "gliner25": 35.88429420981452,
-    "d1_2b": 61.22943842336327
+    "d1_2b": 61.20315751472942
    },
    "absent_correct_mean": {
     "sage2": 72.16860203134858,
@@ -1239,7 +1254,7 @@
     "nuextract3": 57.02147381697148,
     "schematron3b": 54.34669150504358,
     "gliner25": 44.112116117565755,
-    "d1_2b": 63.73109831473795
+    "d1_2b": 63.558981275151034
    },
    "absent_sets": [
     "fatura",
@@ -1284,10 +1299,10 @@
      "sig": true
     },
     "d1_2b": {
-     "diff": -14.352040150525454,
+     "diff": -14.40105975836859,
      "ci95": [
-      -17.280678461713094,
-      -11.14981997490463
+      -17.333826881623793,
+      -11.203395834260917
      ],
      "sig": true
     }
@@ -1296,7 +1311,8 @@
   "image": {
    "systems": [
     "sage2",
-    "clairic_img"
+    "clairic_img",
+    "d1_2b_img"
    ],
    "reference": "sage2",
    "datasets": {
@@ -1305,12 +1321,14 @@
      "fields": 612,
      "acc": {
       "sage2": 90.68627450980392,
-      "clairic_img": 92.6470588235294
+      "clairic_img": 92.6470588235294,
+      "d1_2b_img": 91.17647058823529
      },
      "absent_fields": 166,
      "absent_correct": {
       "sage2": 96.98795180722891,
-      "clairic_img": 87.34939759036145
+      "clairic_img": 87.34939759036145,
+      "d1_2b_img": 95.78313253012048
      },
      "diff_vs_ref": {
       "clairic_img": {
@@ -1318,6 +1336,14 @@
        "ci95": [
         -0.6535947712418277,
         4.523424878836835
+       ],
+       "sig": false
+      },
+      "d1_2b_img": {
+       "diff": 0.49019607843136725,
+       "ci95": [
+        -1.3093289689034293,
+        2.28384991843393
        ],
        "sig": false
       }
@@ -1328,12 +1354,14 @@
      "fields": 1556,
      "acc": {
       "sage2": 73.51268021938371,
-      "clairic_img": 72.1791744349124
+      "clairic_img": 72.1791744349124,
+      "d1_2b_img": 58.11876321066873
      },
      "absent_fields": 51,
      "absent_correct": {
       "sage2": 84.31372549019608,
-      "clairic_img": 64.70588235294117
+      "clairic_img": 64.70588235294117,
+      "d1_2b_img": 64.70588235294117
      },
      "diff_vs_ref": {
       "clairic_img": {
@@ -1343,6 +1371,14 @@
         1.333835435894585
        ],
        "sig": false
+      },
+      "d1_2b_img": {
+       "diff": -15.393917008714979,
+       "ci95": [
+        -18.615433081105138,
+        -11.907481686718825
+       ],
+       "sig": true
       }
      }
     },
@@ -1351,12 +1387,14 @@
      "fields": 145,
      "acc": {
       "sage2": 72.99005734667635,
-      "clairic_img": 87.76307030821047
+      "clairic_img": 87.76307030821047,
+      "d1_2b_img": 81.10356079848003
      },
      "absent_fields": 0,
      "absent_correct": {
       "sage2": null,
-      "clairic_img": null
+      "clairic_img": null,
+      "d1_2b_img": null
      },
      "diff_vs_ref": {
       "clairic_img": {
@@ -1364,6 +1402,14 @@
        "ci95": [
         9.326021126805117,
         21.016786961979747
+       ],
+       "sig": true
+      },
+      "d1_2b_img": {
+       "diff": 8.11350345180368,
+       "ci95": [
+        1.96935853625952,
+        14.654227814770493
        ],
        "sig": true
       }
@@ -1374,12 +1420,14 @@
      "fields": 972,
      "acc": {
       "sage2": 66.99021995148878,
-      "clairic_img": 63.369343649039465
+      "clairic_img": 63.369343649039465,
+      "d1_2b_img": 59.02255747650326
      },
      "absent_fields": 231,
      "absent_correct": {
       "sage2": 52.38095238095238,
-      "clairic_img": 18.614718614718615
+      "clairic_img": 18.614718614718615,
+      "d1_2b_img": 29.437229437229437
      },
      "diff_vs_ref": {
       "clairic_img": {
@@ -1389,6 +1437,14 @@
         0.07417343110802221
        ],
        "sig": false
+      },
+      "d1_2b_img": {
+       "diff": -7.967662474985524,
+       "ci95": [
+        -11.033628278791312,
+        -4.813382113637687
+       ],
+       "sig": true
       }
      }
     },
@@ -1397,12 +1453,14 @@
      "fields": 218,
      "acc": {
       "sage2": 41.28440366972477,
-      "clairic_img": 62.38532110091743
+      "clairic_img": 62.38532110091743,
+      "d1_2b_img": 26.605504587155963
      },
      "absent_fields": 18,
      "absent_correct": {
       "sage2": 50.0,
-      "clairic_img": 38.888888888888886
+      "clairic_img": 38.888888888888886,
+      "d1_2b_img": 38.888888888888886
      },
      "diff_vs_ref": {
       "clairic_img": {
@@ -1410,6 +1468,14 @@
        "ci95": [
         12.68292682926829,
         30.454545454545453
+       ],
+       "sig": true
+      },
+      "d1_2b_img": {
+       "diff": -14.678899082568805,
+       "ci95": [
+        -23.111111111111107,
+        -5.4455445544554415
        ],
        "sig": true
       }
@@ -1420,12 +1486,14 @@
      "fields": 572,
      "acc": {
       "sage2": 59.26573426573427,
-      "clairic_img": 68.53146853146853
+      "clairic_img": 68.53146853146853,
+      "d1_2b_img": 56.11888111888112
      },
      "absent_fields": 0,
      "absent_correct": {
       "sage2": null,
-      "clairic_img": null
+      "clairic_img": null,
+      "d1_2b_img": null
      },
      "diff_vs_ref": {
       "clairic_img": {
@@ -1433,6 +1501,14 @@
        "ci95": [
         5.769230769230774,
         12.76223776223776
+       ],
+       "sig": true
+      },
+      "d1_2b_img": {
+       "diff": -3.1468531468531467,
+       "ci95": [
+        -5.7692307692307665,
+        -0.5244755244755268
        ],
        "sig": true
       }
@@ -1443,12 +1519,14 @@
      "fields": 947,
      "acc": {
       "sage2": 53.030969274647376,
-      "clairic_img": 82.42970689009599
+      "clairic_img": 82.42970689009599,
+      "d1_2b_img": 51.56986976416754
      },
      "absent_fields": 404,
      "absent_correct": {
       "sage2": 98.26732673267327,
-      "clairic_img": 80.1980198019802
+      "clairic_img": 80.1980198019802,
+      "d1_2b_img": 95.04950495049505
      },
      "diff_vs_ref": {
       "clairic_img": {
@@ -1458,6 +1536,14 @@
         33.28540789832364
        ],
        "sig": true
+      },
+      "d1_2b_img": {
+       "diff": -1.4610995104798334,
+       "ci95": [
+        -3.801813580060667,
+        0.9076532752415503
+       ],
+       "sig": false
       }
      }
     }
@@ -1471,15 +1557,18 @@
    ],
    "mean": {
     "sage2": 69.0927271394155,
-    "clairic_img": 75.66879366332184
+    "clairic_img": 75.66879366332184,
+    "d1_2b_img": 63.20537133220866
    },
    "mean_all_sets": {
     "sage2": 65.39433417677988,
-    "clairic_img": 75.61502053402481
+    "clairic_img": 75.61502053402481,
+    "d1_2b_img": 60.53080107772742
    },
    "absent_correct_mean": {
     "sage2": 70.92065741959433,
-    "clairic_img": 52.38972186172753
+    "clairic_img": 52.38972186172753,
+    "d1_2b_img": 57.203783302294994
    },
    "absent_sets": [
     "fatura",
@@ -1493,6 +1582,14 @@
      "ci95": [
       4.0836196444918755,
       9.095132075807157
+     ],
+     "sig": true
+    },
+    "d1_2b_img": {
+     "diff": -5.887355807206845,
+     "ci95": [
+      -8.244846946645616,
+      -3.528701757121503
      ],
      "sig": true
     }
